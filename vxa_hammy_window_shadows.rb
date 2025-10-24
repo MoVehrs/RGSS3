@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - Window Shadows v1.00
+# ▼ Hammy - Window Shadows v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 23.10.2025
+# -- Last Updated: 24.10.2025
 # -- Requires: None
 # -- Recommended: None
 # -- Credits: Yanfly (Documentation style)
@@ -14,6 +14,8 @@ $imported[:hammy_window_shadows] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 24.10.2025 - Changed setter methods from super to alias_method pattern for 
+#              better compatibility. (v1.01)
 # 23.10.2025 - Initial release. (v1.00)
 # 
 #==============================================================================
@@ -71,16 +73,14 @@ $imported[:hammy_window_shadows] = true
 #   - initialize → window_shadows_win_base_initialize
 #   - dispose → window_shadows_win_base_dispose
 #   - update → window_shadows_win_base_update
-# 
-# ★ Super Methods:
-#   - x=
-#   - y=
-#   - z=
-#   - width=
-#   - height=
-#   - openness=
-#   - visible=
-#   - opacity=
+#   - x= → window_shadows_win_base_x=
+#   - y= → window_shadows_win_base_y=
+#   - z= → window_shadows_win_base_z=
+#   - width= → window_shadows_win_base_width=
+#   - height= → window_shadows_win_base_height=
+#   - openness= → window_shadows_win_base_openness=
+#   - visible= → window_shadows_win_base_visible=
+#   - opacity= → window_shadows_win_base_opacity=
 # 
 #==============================================================================
 # ▼ General Setup & Usage Guide
@@ -382,6 +382,14 @@ class Window_Base < Window
   alias_method :window_shadows_win_base_initialize, :initialize
   alias_method :window_shadows_win_base_dispose, :dispose
   alias_method :window_shadows_win_base_update, :update
+  alias_method :window_shadows_win_base_x=, :x=
+  alias_method :window_shadows_win_base_y=, :y=
+  alias_method :window_shadows_win_base_z=, :z=
+  alias_method :window_shadows_win_base_width=, :width=
+  alias_method :window_shadows_win_base_height=, :height=
+  alias_method :window_shadows_win_base_openness=, :openness=
+  alias_method :window_shadows_win_base_visible=, :visible=
+  alias_method :window_shadows_win_base_opacity=, :opacity=
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -426,80 +434,88 @@ class Window_Base < Window
   end
   
   #--------------------------------------------------------------------------
-  # * Set X Coordinate                                                [Super]
+  # * Set X Coordinate                                                [Alias]
   #--------------------------------------------------------------------------
   def x=(value)
-    super
+    self.window_shadows_win_base_x = value
+
     if shadow_window_active?
       @shadow_window.x = value + @shadow_window.offset_x
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Y Coordinate                                                [Super]
+  # * Set Y Coordinate                                                [Alias]
   #--------------------------------------------------------------------------
   def y=(value)
-    super
+    self.window_shadows_win_base_y = value
+
     if shadow_window_active?
       @shadow_window.y = value + @shadow_window.offset_y
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Z Coordinate                                                [Super]
+  # * Set Z Coordinate                                                [Alias]
   #--------------------------------------------------------------------------
   def z=(value)
-    super
+    self.window_shadows_win_base_z = value
+
     if shadow_window_active?
       @shadow_window.z = value - 1
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Width                                                       [Super]
+  # * Set Width                                                       [Alias]
   #--------------------------------------------------------------------------
   def width=(value)
-    super
+    self.window_shadows_win_base_width = value
+
     if shadow_window_active?
       @shadow_window.width = value + @shadow_window.offset_width
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Height                                                      [Super]
+  # * Set Height                                                      [Alias]
   #--------------------------------------------------------------------------
   def height=(value)
-    super
+    self.window_shadows_win_base_height = value
+
     if shadow_window_active?
       @shadow_window.height = value + @shadow_window.offset_height
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Openness                                                    [Super]
+  # * Set Openness                                                    [Alias]
   #--------------------------------------------------------------------------
   def openness=(value)
-    super
+    self.window_shadows_win_base_openness = value
+
     if shadow_window_active?
       @shadow_window.openness = value
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Visibility                                                  [Super]
+  # * Set Visibility                                                  [Alias]
   #--------------------------------------------------------------------------
   def visible=(value)
-    super
+    self.window_shadows_win_base_visible = value
+
     if shadow_window_active?
       @shadow_window.visible = value
     end
   end
   
   #--------------------------------------------------------------------------
-  # * Set Opacity                                                     [Super]
+  # * Set Opacity                                                     [Alias]
   #--------------------------------------------------------------------------
   def opacity=(value)
-    super
+    self.window_shadows_win_base_opacity = value
+    
     if shadow_window_active?
       ratio = value / 255.0
       @shadow_window.opacity = (@shadow_window.shadow_opacity * ratio).to_i
