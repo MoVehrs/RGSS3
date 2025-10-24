@@ -2,7 +2,8 @@
 # ▼ Hammy - FF9 Windowskin System - YEA System Options Addon v1.00
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # -- Last Updated: 23.10.2025
-# -- Requires: Hammy FF9 Windowskin System v1.00, YEA-SystemOptions v1.00
+# -- Requires: Hammy FF9 Windowskin System v1.00 or higher,
+#              YEA-SystemOptions v1.00
 # -- Optional: Theolized - Global System Option v1.00
 # -- Credits: Yanfly (YEA-SystemOptions, Documentation style),
 #             Theo Allen (Global System Option)
@@ -287,19 +288,19 @@ class Window_SystemOptions < Window_Command
   #--------------------------------------------------------------------------
   def draw_windowskin_toggle(rect, index, symbol)
     name = @list[index][:name]
-    draw_text(0, rect.y, contents.width/2, line_height, name, 1)
+    draw_text(0, rect.y, contents.width / 2, line_height, name, 1)
     
     enabled = $game_system.windowskin_color == :blue
     
-    dx = contents.width/2
+    dx = contents.width / 2
     change_color(normal_color, !enabled)
     option1 = YEA::SYSTEM::COMMAND_VOCAB[symbol][1]
-    draw_text(dx, rect.y, contents.width/4, line_height, option1, 1)
+    draw_text(dx, rect.y, contents.width / 4, line_height, option1, 1)
     
-    dx += contents.width/4
+    dx += contents.width / 4
     change_color(normal_color, enabled)
     option2 = YEA::SYSTEM::COMMAND_VOCAB[symbol][2]
-    draw_text(dx, rect.y, contents.width/4, line_height, option2, 1)
+    draw_text(dx, rect.y, contents.width / 4, line_height, option2, 1)
   end
   
   #--------------------------------------------------------------------------
