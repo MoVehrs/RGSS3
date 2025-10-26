@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - Window Shadows v1.01
+# ▼ Hammy - Window Shadows v1.02
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 24.10.2025
+# -- Last Updated: 26.10.2025
 # -- Requires: None
 # -- Recommended: None
 # -- Credits: Yanfly (Documentation style)
@@ -14,6 +14,8 @@ $imported[:hammy_window_shadows] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 26.10.2025 - Added refresh method to Window_Shadow for dynamic windowskin 
+#              updates when parent window type changes. (v1.02)
 # 24.10.2025 - Changed setter methods from super to alias_method pattern for 
 #              better compatibility. (v1.01)
 # 23.10.2025 - Initial release. (v1.00)
@@ -590,6 +592,26 @@ class Window_Shadow < Window_Base
   # * Update Tone                                                 [Overwrite]
   #--------------------------------------------------------------------------
   def update_tone
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Refresh Shadow with New Type                                   [Custom]
+  #--------------------------------------------------------------------------
+  def refresh(parent_window, window_type = nil)
+    window_class = parent_window.class
+    
+    settings = CONFIG::WINDOW_SHADOWS.get_shadow_settings(window_class, window_type)
+    return unless settings[:windowskin]
+    
+    @offset_x = settings[:offset_x]
+    @offset_y = settings[:offset_y]
+    @offset_width = settings[:offset_width]
+    @offset_height = settings[:offset_height]
+    @shadow_opacity = settings[:opacity]
+    
+    self.windowskin = Cache.system(settings[:windowskin])
+    
+    setup(parent_window)
   end
   
   #--------------------------------------------------------------------------
