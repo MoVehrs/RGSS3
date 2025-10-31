@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - FF9 Popup Window v1.00
+# ▼ Hammy - FF9 Popup Window v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 26.10.2025
+# -- Last Updated: 31.10.2025
 # -- Requires: None
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Vlue (Popup Window), Yanfly (Documentation style)
@@ -14,6 +14,7 @@ $imported[:hammy_ff9_popup] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 31.10.2025 - Added configurable compact spacing for empty lines. (v1.01)
 # 26.10.2025 - Initial release. (v1.00)
 # 
 #==============================================================================
@@ -108,14 +109,13 @@ $imported[:hammy_ff9_popup] = true
 # -----------------------------------------------------------------------------
 # ► Basic Popup Display
 # -----------------------------------------------------------------------------
-# ★ default_popup(['text line 1', 'text line 2'], x, y, compact, type)
+# ★ default_popup(['text line 1', 'text line 2'], x, y, type)
 #   Displays a popup window with custom text content.
 #   - text: Array of strings or hashes for each line of popup text
 #           String format: "Text content" (left-aligned by default)
 #           Hash format: {text: "Text content", align: :center/:left/:right}
 #   - x: Optional horizontal position (nil for center)
 #   - y: Optional vertical position (nil for center)
-#   - compact: Optional, use half-height for empty lines (default: false)
 #   - type: Optional windowskin type (:default, :frame, :topbar, :help)
 #   - Returns: nil
 # 
@@ -129,56 +129,48 @@ $imported[:hammy_ff9_popup] = true
 #   - Mixed alignment: centered title with left-aligned text
 #     default_popup([{text: 'Centered Title', align: :center}, 'Left text'])
 # 
-#   - Right-aligned text with compact spacing enabled
-#     default_popup([{text: 'Right Text', align: :right}], nil, nil, true)
+#   - Right-aligned text
+#     default_popup([{text: 'Right Text', align: :right}])
 # 
 #   - Frame windowskin type (requires Hammy FF9 Windowskin System)
-#     default_popup(['Special message!'], nil, nil, false, :frame)
+#     default_popup(['Special message!'], nil, nil, :frame)
 # 
 # -----------------------------------------------------------------------------
 # ► Gold Reward Popups
 # -----------------------------------------------------------------------------
-# ★ gold_popup(amount, x, y, compact, type)
+# ★ gold_popup(amount, x, y, type)
 #   Displays gold reward popup and adds gold to party.
 #   - amount: Amount of gold to add to party funds
 #   - x: Optional horizontal position (nil for center)
 #   - y: Optional vertical position (nil for center)
-#   - compact: Optional, use half-height for empty lines (default: true)
 #   - type: Optional windowskin type (:default, :frame, :topbar, :help)
 #   - Returns: nil
 # 
 # ★ Examples:
-#   - Add 100 gold (compact enabled by default)
+#   - Add 100 gold
 #     gold_popup(100)
 # 
 #   - Add 9999 gold at position x=200, y=100
 #     gold_popup(9999, 200, 100)
 # 
-#   - Add gold with normal spacing (compact disabled)
-#     gold_popup(500, nil, nil, false)
-# 
 # -----------------------------------------------------------------------------
 # ► Item Reward Popups
 # -----------------------------------------------------------------------------
-# ★ item_popup(item_id, quantity, x, y, compact, type)
+# ★ item_popup(item_id, quantity, x, y, type)
 #   Displays item reward popup and adds items to inventory.
 #   - item_id: Database ID of the item to reward
 #   - quantity: Number of items to add (default: 1)
 #   - x: Optional horizontal position (nil for center)
 #   - y: Optional vertical position (nil for center)
-#   - compact: Optional, use half-height for empty lines (default: true)
 #   - type: Optional windowskin type (:default, :frame, :topbar, :help)
 #   - Returns: nil
 # 
 # ★ Examples:
-#   - Add 1 of item ID 1 (compact enabled by default)
+#   - Add 1 of item ID 1
 #     item_popup(1)
 # 
 #   - Add 3 of item ID 5 at position x=50, y=50
 #     item_popup(5, 3, 50, 50)
-# 
-#   - Add item with normal spacing (compact disabled)
-#     item_popup(10, 1, nil, nil, false)
 # 
 #==============================================================================
 # ▼ Recommended Scripts
@@ -241,11 +233,17 @@ module CONFIG
     #   Uses RPG Maker VX Ace's standard color palette (0-31)
     # CURRENCY_NAME: Name of the currency displayed in gold reward popups
     #   Can be customized to match your game's currency system
+    # COMPACT_SPACING: Enable compact spacing for empty text lines
+    #   When true, empty text lines use reduced height spacing for separation
+    # COMPACT_LINE_HEIGHT: Height for empty lines when compact spacing enabled
+    #   Pixel height used for empty text lines when COMPACT_SPACING is true
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     LINE_HEIGHT = Font.default_size
     STANDARD_PADDING = 12
     HIGHLIGHT_COLOR = 14
     CURRENCY_NAME = "Gil"
+    COMPACT_SPACING = true
+    COMPACT_LINE_HEIGHT = 6
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Sound Effect Settings -
@@ -346,16 +344,16 @@ class Game_Interpreter
   #--------------------------------------------------------------------------
   # * Show Default Popup Window                                      [Custom]
   #--------------------------------------------------------------------------
-  def default_popup(text, x = nil, y = nil, compact = false, type = nil)
+  def default_popup(text, x = nil, y = nil, type = nil)
     return unless SceneManager.scene.is_a?(Scene_Map)
-    SceneManager.scene.show_ff9_popup(text, x, y, compact, type)
+    SceneManager.scene.show_ff9_popup(text, x, y, type)
     wait_for_ff9_popup
   end
   
   #--------------------------------------------------------------------------
   # * Show Gold Received Popup Window                                [Custom]
   #--------------------------------------------------------------------------
-  def gold_popup(amount, x = nil, y = nil, compact = true, type = nil)
+  def gold_popup(amount, x = nil, y = nil, type = nil)
     return unless SceneManager.scene.is_a?(Scene_Map)
     
     $game_party.gain_gold(amount)
@@ -363,15 +361,14 @@ class Game_Interpreter
     currency = CONFIG::FF9_POPUP::CURRENCY_NAME
     text = ["", "Received \\c[#{color}]#{amount} #{currency}\\c[0]!", ""]
     
-    SceneManager.scene.show_ff9_popup(text, x, y, compact, type)
+    SceneManager.scene.show_ff9_popup(text, x, y, type)
     wait_for_ff9_popup
   end
   
   #--------------------------------------------------------------------------
   # * Show Item Received Popup Window                                [Custom]
   #--------------------------------------------------------------------------
-  def item_popup(item_id, quantity = 1, x = nil, y = nil, compact = true, 
-                 type = nil)
+  def item_popup(item_id, quantity = 1, x = nil, y = nil, type = nil)
     return unless SceneManager.scene.is_a?(Scene_Map)
     
     $game_party.gain_item($data_items[item_id], quantity)
@@ -384,7 +381,7 @@ class Game_Interpreter
       text = ["", "Received \\c[#{color}]#{item_name}\\c[0]!", ""]
     end
     
-    SceneManager.scene.show_ff9_popup(text, x, y, compact, type)
+    SceneManager.scene.show_ff9_popup(text, x, y, type)
     wait_for_ff9_popup
   end
   
@@ -408,6 +405,8 @@ class Window_FF9Popup < Window_Base
     @offset_x = nil
     @offset_y = nil
     @windowskin_name = nil
+    @compact_spacing = CONFIG::FF9_POPUP::COMPACT_SPACING
+    @compact_line_height = CONFIG::FF9_POPUP::COMPACT_LINE_HEIGHT
   end
   
   #--------------------------------------------------------------------------
@@ -425,6 +424,39 @@ class Window_FF9Popup < Window_Base
   end
   
   #--------------------------------------------------------------------------
+  # * Update Bottom Padding                                       [Overwrite]
+  #--------------------------------------------------------------------------
+  def update_padding_bottom
+    self.padding_bottom = padding
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Calculate Height of Window Contents                         [Overwrite]
+  #--------------------------------------------------------------------------
+  def contents_height
+    calculate_text_height
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Calculate Text Height                                          [Custom]
+  #--------------------------------------------------------------------------
+  def calculate_text_height
+    return 0 unless @text && !@text.empty?
+    
+    total_height = 0
+    @text.each do |line|
+      string = line.is_a?(Hash) ? line[:text] : line
+      if @compact_spacing && string && string.strip.empty?
+        total_height += @compact_line_height
+      else
+        total_height += line_height
+      end
+    end
+    
+    total_height
+  end
+  
+  #--------------------------------------------------------------------------
   # * Get Icon Width                                                 [Custom]
   #--------------------------------------------------------------------------
   def icon_width
@@ -435,12 +467,11 @@ class Window_FF9Popup < Window_Base
   #--------------------------------------------------------------------------
   # * Refresh                                                        [Custom]
   #--------------------------------------------------------------------------
-  def refresh(text = nil, x = nil, y = nil, compact = false, type = nil)
+  def refresh(text = nil, x = nil, y = nil, type = nil)
     return unless text
     
     @text = text
     @text_widths = []
-    @compact = compact
     @offset_x = x unless x.nil?
     @offset_y = y unless y.nil?
     
@@ -472,7 +503,6 @@ class Window_FF9Popup < Window_Base
   def clear
     @text = []
     @text_widths = []
-    @compact = false
     @offset_x = nil
     @offset_y = nil
     @windowskin_name = nil
@@ -500,8 +530,8 @@ class Window_FF9Popup < Window_Base
       @text_widths[i] = text_width
       self.width = [text_width + standard_padding * 2, self.width].max
       
-      if @compact && string.strip.empty?
-        total_height += line_height / 2
+      if @compact_spacing && string.strip.empty?
+        total_height += @compact_line_height
       else
         total_height += line_height
       end
@@ -544,8 +574,8 @@ class Window_FF9Popup < Window_Base
       x_pos = calculate_text_x_position(align, i)
       draw_text_ex(x_pos, current_y, string)
       
-      if @compact && string.strip.empty?
-        current_y += line_height / 2
+      if @compact_spacing && string.strip.empty?
+        current_y += @compact_line_height
       else
         current_y += line_height
       end
@@ -653,8 +683,8 @@ class Scene_Map < Scene_Base
   #--------------------------------------------------------------------------
   # * Show FF9 Popup Window                                          [Custom]
   #--------------------------------------------------------------------------
-  def show_ff9_popup(text, x = nil, y = nil, compact = false, type = nil)
-    @ff9_popup_window.refresh(text, x, y, compact, type)
+  def show_ff9_popup(text, x = nil, y = nil, type = nil)
+    @ff9_popup_window.refresh(text, x, y, type)
     @ff9_popup_window.open
     $game_player.ff9_popup_active = true
   end
