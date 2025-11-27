@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - Window Headers v1.00
+# ▼ Hammy - Window Headers v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 24.10.2025
+# -- Last Updated: 27.11.2025
 # -- Requires: None
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Yanfly (Documentation style)
@@ -14,6 +14,8 @@ $imported[:hammy_window_headers] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 27.11.2025 - Added compatibility for Hammy FF9 Windowskin System and fixed
+#              header sprite persistence during battle transition. (v1.01)
 # 24.10.2025 - Initial release. (v1.00)
 # 
 #==============================================================================
@@ -33,6 +35,7 @@ $imported[:hammy_window_headers] = true
 # ★ Automatic header creation for configured windows
 # ★ Text and image header support with dual content types
 # ★ Per-window-class header configuration with custom settings
+# ★ Integration with Hammy FF9 Windowskin System for type-based offsets
 # 
 # -----------------------------------------------------------------------------
 # ► Customization System
@@ -115,15 +118,46 @@ module CONFIG
     # parent window. These values control where headers appear in relation to
     # the window borders.
     # 
-    # TEXT_OFFSET_X: Horizontal offset for text headers (positive = right)
-    # TEXT_OFFSET_Y: Vertical offset for text headers (positive = down)
-    # IMAGE_OFFSET_X: Horizontal offset for image headers (positive = right)
-    # IMAGE_OFFSET_Y: Vertical offset for image headers (positive = down)
+    # HEADER_OFFSETS: Hash containing offset settings for different window types
+    #   :default - Default offsets for standard windows
+    # 
+    #   The following window types require the FF9 Windowskin System:
+    #   :frame   - Offsets for frame-type windows
+    #   :topbar  - Offsets for topbar-type windows
+    #   :help    - Offsets for help windows
+    #
+    #   Each type contains:
+    #     :text_offset_x  - Horizontal offset for text headers
+    #     :text_offset_y  - Vertical offset for text headers
+    #     :image_offset_x - Horizontal offset for image headers
+    #     :image_offset_y - Vertical offset for image headers
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    TEXT_OFFSET_X = 10
-    TEXT_OFFSET_Y = -4
-    IMAGE_OFFSET_X = 10
-    IMAGE_OFFSET_Y = -2
+    HEADER_OFFSETS = {
+      :default => {
+        :text_offset_x => 10,
+        :text_offset_y => -4,
+        :image_offset_x => 10,
+        :image_offset_y => -2
+      },
+      :frame => {
+        :text_offset_x => 10,
+        :text_offset_y => -4,
+        :image_offset_x => 10,
+        :image_offset_y => -2
+      },
+      :topbar => {
+        :text_offset_x => 10,
+        :text_offset_y => -4,
+        :image_offset_x => 10,
+        :image_offset_y => -2
+      },
+      :help => {
+        :text_offset_x => 10,
+        :text_offset_y => -4,
+        :image_offset_x => 10,
+        :image_offset_y => -2
+      }
+    }
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Text Header Settings -
@@ -236,7 +270,10 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def initialize(x, y, width, height)
     @header_sprite = nil
+    @header_x_offset = nil
+    @header_y_offset = nil
     @header_created = false
+    
     window_headers_win_base_initialize(x, y, width, height)
     create_header_sprite
   end
@@ -266,17 +303,36 @@ class Window_Base < Window
   end
   
   #--------------------------------------------------------------------------
+  # * Get Header Offset                                              [Custom]
+  #--------------------------------------------------------------------------
+  def get_header_offset(key)
+    type = :default
+    if $imported[:hammy_ff9_windowskin_system]
+      type = CONFIG::FF9_WINDOWSKIN.get_window_type(self.class)
+    end
+    
+    offsets = CONFIG::WINDOW_HEADERS::HEADER_OFFSETS[type]
+    offsets = CONFIG::WINDOW_HEADERS::HEADER_OFFSETS[:default] if offsets.nil?
+    
+    offsets[key]
+  end
+  
+  #--------------------------------------------------------------------------
   # * Update Header Position                                         [Custom]
   #--------------------------------------------------------------------------
   def update_header_position
-    if @header_type == :text
-      @header_sprite.x = self.x + CONFIG::WINDOW_HEADERS::TEXT_OFFSET_X
-      @header_sprite.y = self.y + CONFIG::WINDOW_HEADERS::TEXT_OFFSET_Y
-    else
-      @header_sprite.x = self.x + CONFIG::WINDOW_HEADERS::IMAGE_OFFSET_X
-      @header_sprite.y = self.y + CONFIG::WINDOW_HEADERS::IMAGE_OFFSET_Y
+    unless @header_x_offset && @header_y_offset
+      if @header_type == :text
+        @header_x_offset = get_header_offset(:text_offset_x)
+        @header_y_offset = get_header_offset(:text_offset_y)
+      else
+        @header_x_offset = get_header_offset(:image_offset_x)
+        @header_y_offset = get_header_offset(:image_offset_y)
+      end
     end
     
+    @header_sprite.x = self.x + @header_x_offset
+    @header_sprite.y = self.y + @header_y_offset
     @header_sprite.z = self.z + 1
   end
   
@@ -294,11 +350,15 @@ class Window_Base < Window
     self.window_headers_win_base_x = value
     
     if header_sprite_active?
-      if @header_type == :text
-        @header_sprite.x = value + CONFIG::WINDOW_HEADERS::TEXT_OFFSET_X
-      else
-        @header_sprite.x = value + CONFIG::WINDOW_HEADERS::IMAGE_OFFSET_X
+      unless @header_x_offset
+        if @header_type == :text
+          @header_x_offset = get_header_offset(:text_offset_x)
+        else
+          @header_x_offset = get_header_offset(:image_offset_x)
+        end
       end
+      
+      @header_sprite.x = value + @header_x_offset
     end
   end
   
@@ -309,11 +369,15 @@ class Window_Base < Window
     self.window_headers_win_base_y = value
     
     if header_sprite_active?
-      if @header_type == :text
-        @header_sprite.y = value + CONFIG::WINDOW_HEADERS::TEXT_OFFSET_Y
-      else
-        @header_sprite.y = value + CONFIG::WINDOW_HEADERS::IMAGE_OFFSET_Y
+      unless @header_y_offset
+        if @header_type == :text
+          @header_y_offset = get_header_offset(:text_offset_y)
+        else
+          @header_y_offset = get_header_offset(:image_offset_y)
+        end
       end
+      
+      @header_sprite.y = value + @header_y_offset
     end
   end
   
@@ -434,6 +498,51 @@ class Window_Base < Window
   end
   
 end # Window_Base
+
+#==============================================================================
+# ** Scene_Map
+#------------------------------------------------------------------------------
+#  This class performs the map screen processing.
+#==============================================================================
+
+class Scene_Map < Scene_Base
+  #--------------------------------------------------------------------------
+  # * Alias Method Definitions                                       [Custom]
+  #--------------------------------------------------------------------------
+  alias_method :window_headers_scene_map_pre_battle_scene, :pre_battle_scene
+  
+  #--------------------------------------------------------------------------
+  # * Preprocessing for Battle Screen Transition                      [Alias]
+  #--------------------------------------------------------------------------
+  def pre_battle_scene
+    window_headers_scene_map_pre_battle_scene
+    instance_variables.each do |var_name|
+      instance_var = instance_variable_get(var_name)
+      next unless instance_var.is_a?(Window)
+      
+      if instance_var.is_a?(Window_Message)
+        [
+          :@choice_window, :@gold_window, :@number_window, :@item_window
+        ].each do |sub_window_symbol|
+          sub_window = instance_var.instance_variable_get(sub_window_symbol)
+          next unless sub_window
+          next unless sub_window.instance_variable_defined?(:@header_sprite)
+          
+          header_sprite = sub_window.instance_variable_get(:@header_sprite)
+          next unless header_sprite && !header_sprite.disposed?
+          
+          header_sprite.visible = false
+        end
+      end
+      
+      next unless instance_var.instance_variable_defined?(:@header_sprite)
+      
+      header_sprite = instance_var.instance_variable_get(:@header_sprite)
+      header_sprite.visible = false if header_sprite && !header_sprite.disposed?
+    end
+  end
+  
+end # Scene_Map
 
 #==============================================================================
 # 
