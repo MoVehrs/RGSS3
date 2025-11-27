@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - Window Shadows v1.02
+# ▼ Hammy - Window Shadows v1.03
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 26.10.2025
+# -- Last Updated: 27.11.2025
 # -- Requires: None
 # -- Recommended: None
 # -- Credits: Yanfly (Documentation style)
@@ -14,6 +14,7 @@ $imported[:hammy_window_shadows] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 27.11.2025 - Fixed shadow sprite persistence during battle transition. (v1.03)
 # 26.10.2025 - Added refresh method to Window_Shadow for dynamic windowskin 
 #              updates when parent window type changes. (v1.02)
 # 24.10.2025 - Changed setter methods from super to alias_method pattern for 
@@ -440,7 +441,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def x=(value)
     self.window_shadows_win_base_x = value
-
+    
     if shadow_window_active?
       @shadow_window.x = value + @shadow_window.offset_x
     end
@@ -451,7 +452,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def y=(value)
     self.window_shadows_win_base_y = value
-
+    
     if shadow_window_active?
       @shadow_window.y = value + @shadow_window.offset_y
     end
@@ -462,7 +463,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def z=(value)
     self.window_shadows_win_base_z = value
-
+    
     if shadow_window_active?
       @shadow_window.z = value - 1
     end
@@ -473,7 +474,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def width=(value)
     self.window_shadows_win_base_width = value
-
+    
     if shadow_window_active?
       @shadow_window.width = value + @shadow_window.offset_width
     end
@@ -484,7 +485,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def height=(value)
     self.window_shadows_win_base_height = value
-
+    
     if shadow_window_active?
       @shadow_window.height = value + @shadow_window.offset_height
     end
@@ -495,7 +496,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def openness=(value)
     self.window_shadows_win_base_openness = value
-
+    
     if shadow_window_active?
       @shadow_window.openness = value
     end
@@ -506,7 +507,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def visible=(value)
     self.window_shadows_win_base_visible = value
-
+    
     if shadow_window_active?
       @shadow_window.visible = value
     end
@@ -610,7 +611,6 @@ class Window_Shadow < Window_Base
     @shadow_opacity = settings[:opacity]
     
     self.windowskin = Cache.system(settings[:windowskin])
-    
     setup(parent_window)
   end
   
@@ -625,14 +625,56 @@ class Window_Shadow < Window_Base
     self.height = parent_window.height + @offset_height
     self.openness = parent_window.openness
     self.visible = parent_window.visible && $game_system.window_shadows
-    
-    ratio = parent_window.opacity / 255.0
-    self.opacity = (@shadow_opacity * ratio).to_i
-    
+    self.opacity = (@shadow_opacity * (parent_window.opacity / 255.0)).to_i
     @shadow_enabled = true
   end
   
 end # Window_Shadow
+
+#==============================================================================
+# ** Scene_Map
+#------------------------------------------------------------------------------
+#  This class performs the map screen processing.
+#==============================================================================
+
+class Scene_Map < Scene_Base
+  #--------------------------------------------------------------------------
+  # * Alias Method Definitions                                       [Custom]
+  #--------------------------------------------------------------------------
+  alias_method :window_shadows_scene_map_pre_battle_scene, :pre_battle_scene
+  
+  #--------------------------------------------------------------------------
+  # * Preprocessing for Battle Screen Transition                      [Alias]
+  #--------------------------------------------------------------------------
+  def pre_battle_scene
+    window_shadows_scene_map_pre_battle_scene
+    instance_variables.each do |var_name|
+      instance_var = instance_variable_get(var_name)
+      next unless instance_var.is_a?(Window)
+      
+      if instance_var.is_a?(Window_Message)
+        [
+          :@choice_window, :@gold_window, :@number_window, :@item_window
+        ].each do |sub_window_symbol|
+          sub_window = instance_var.instance_variable_get(sub_window_symbol)
+          next unless sub_window
+          next unless sub_window.instance_variable_defined?(:@shadow_window)
+          
+          shadow_window = sub_window.instance_variable_get(:@shadow_window)
+          next unless shadow_window && !shadow_window.disposed?
+          
+          shadow_window.visible = false
+        end
+      end
+      
+      next unless instance_var.instance_variable_defined?(:@shadow_window)
+      
+      shadow_window = instance_var.instance_variable_get(:@shadow_window)
+      shadow_window.visible = false if shadow_window && !shadow_window.disposed?
+    end
+  end
+  
+end # Scene_Map
 
 #==============================================================================
 # 
