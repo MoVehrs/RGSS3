@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - FF9 Dialog System v1.00
+# ▼ Hammy - FF9 Dialog System v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 18.11.2025
+# -- Last Updated: 06.12.2025
 # -- Requires: None
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Jupiter Penguin (Message Effects, fade effect),
@@ -16,6 +16,11 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 06.12.2025 - Consolidated arrow images into a single spritesheet,
+#              refactored bubble tag and shadow sprites into Sprite_BubbleTag
+#              class for centralized management, cached shared sprite in
+#              Scene_Map instead of recreating per window, added Hammy Window
+#              Shadows compatibility, and general optimizations. (v1.01)
 # 18.11.2025 - Initial release. (v1.00)
 # 
 #==============================================================================
@@ -99,10 +104,10 @@ $imported[:hammy_ff9_dialog_system] = true
 #   - update_placement → ff9_dialog_win_msg_update_placement
 #   - update → ff9_dialog_win_msg_update
 #   - fiber_main → ff9_dialog_win_msg_fiber_main
+#   - process_all_text → ff9_dialog_win_msg_process_all_text
 #   - update_show_fast → ff9_dialog_win_msg_update_show_fast
 #   - wait_for_one_character → ff9_dialog_win_msg_wait_one_char
 #   - new_page → ff9_dialog_win_msg_new_page
-#   - process_all_text → ff9_dialog_win_msg_process_all_text
 #   - convert_escape_characters → ff9_dialog_win_msg_conv_esc_chars
 #   - obtain_escape_code → ff9_dialog_win_msg_obtain_escape_code
 #   - process_escape_character → ff9_dialog_win_msg_proc_esc_char
@@ -124,6 +129,14 @@ $imported[:hammy_ff9_dialog_system] = true
 #   - settings_changed?
 #   - new_line_x
 #   - process_normal_character
+# 
+# -----------------------------------------------------------------------------
+# ► Scene_Map (Class < Scene_Base)
+# -----------------------------------------------------------------------------
+# ★ Alias Methods:
+#   - start → ff9_dialog_scene_map_start
+#   - update → ff9_dialog_scene_map_update
+#   - terminate → ff9_dialog_scene_map_terminate
 # 
 #==============================================================================
 # ▼ Script Calls
@@ -441,44 +454,68 @@ module CONFIG
     }.freeze
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # - Default Bubble Arrow Sprites -
+    # - Default Bubble Arrow Sprite -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the sprite filenames for bubble arrow graphics. These sprites
-    # point from the dialog window to the target character. All sprite files
-    # should be placed in the Graphics/System folder and sized at 32x32 pixels.
+    # Configure the sprite filename for bubble arrow graphics. This sprite
+    # sheet contains all four arrow directions in a 2x2 grid layout (64x64px).
+    # The sprite file should be placed in the Graphics/System folder.
     # 
-    # down_left: Down-pointing arrow with left orientation
-    # down_right: Down-pointing arrow with right orientation
-    # up_left: Up-pointing arrow with left orientation
-    # up_right: Up-pointing arrow with right orientation
+    # Sprite Sheet Layout (64x64 pixels):
+    #   - (0-31, 0-31): up_left
+    #   - (32-63, 0-31): up_right
+    #   - (0-31, 32-63): down_left
+    #   - (32-63, 32-63): down_right
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    BUBBLE_ARROWS = {
-      down_left: 'BubbleTag_Down_Left',
-      down_right: 'BubbleTag_Down_Right',
-      up_left: 'BubbleTag_Up_Left',
-      up_right: 'BubbleTag_Up_Right'
-    }.freeze
+    BUBBLE_SPRITESHEET = 'BubbleTag'.freeze
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Colored Bubble Arrow Sprites -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure colored bubble arrow sprites for integration with the Hammy
-    # FF9 Windowskin System. These sprites automatically match the current
-    # windowskin color theme when the system is active.
+    # Configure colored bubble arrow sprite sheets for integration with the
+    # Hammy FF9 Windowskin System. These sprite sheets automatically match the
+    # current windowskin color theme when the system is active.
     # 
-    # *_grey: Grey-themed arrow sprites for grey windowskins
-    # *_blue: Blue-themed arrow sprites for blue windowskins
-    # Available directions: up_left, up_right, down_left, down_right
+    # Each sprite sheet uses the same 2x2 grid layout as the default sprite.
+    # 
+    # grey: Grey-themed arrow sprite sheet for grey windowskins
+    # blue: Blue-themed arrow sprite sheet for blue windowskins
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_ARROWS_COLORED = {
-      up_left_grey: 'BubbleTag_Up_Left_Grey',
-      up_right_grey: 'BubbleTag_Up_Right_Grey',
-      down_left_grey: 'BubbleTag_Down_Left_Grey',
-      down_right_grey: 'BubbleTag_Down_Right_Grey',
-      up_left_blue: 'BubbleTag_Up_Left_Blue',
-      up_right_blue: 'BubbleTag_Up_Right_Blue',
-      down_left_blue: 'BubbleTag_Down_Left_Blue',
-      down_right_blue: 'BubbleTag_Down_Right_Blue'
+      grey: 'BubbleTag_Grey',
+      blue: 'BubbleTag_Blue'
+    }.freeze
+    
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # - Shadow Spritesheet -
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the shadow sprite filename for bubble tag arrows for integration
+    # with Hammy Window Shadows. This sprite sheet contains all four arrow
+    # directions in a 2x2 grid layout (64x64px). The sprite file should be
+    # placed in the Graphics/System folder.
+    # 
+    # Shadow sprite sheet uses the same layout as the main bubble tag sprite.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    SHADOW_SPRITESHEET = 'BubbleTag_Shadow'.freeze
+    
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # - Bubble Tag Shadow Settings -
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure shadow sprite positioning and appearance for bubble tag arrows.
+    # When Window Shadows script is active and enabled, a second shadow sprite
+    # is created below the main bubble tag sprite (z-1) with configurable
+    # offsets and opacity.
+    # 
+    # shadow_offset_x: Horizontal offset for shadow sprite in pixels
+    #   Positive values move shadow to the right
+    # shadow_offset_y: Vertical offset for shadow sprite in pixels
+    #   Positive values move shadow downward
+    # shadow_opacity: Opacity value for shadow sprite (0-255)
+    #   Lower values create more transparent shadows
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    SHADOW_POSITION = {
+      shadow_offset_x: 2,
+      shadow_offset_y: 2,
+      shadow_opacity: 120
     }.freeze
     
   end # FF9_DIALOG
@@ -520,6 +557,7 @@ class Game_System
   #--------------------------------------------------------------------------
   def initialize
     ff9_dialog_game_system_initialize
+    
     @message_speed = CONFIG::FF9_DIALOG::FADE_SPEED
     @message_duration = CONFIG::FF9_DIALOG::FADE_DURATION
     @message_fading = true
@@ -558,28 +596,22 @@ class Game_Interpreter
   # * Show Text                                                       [Alias]
   #--------------------------------------------------------------------------
   def command_101
-    if message_contains_chain_code?
-      process_chained_messages
-    else
-      ff9_dialog_game_interpreter_command_101
-    end
+    return process_chained_messages if message_contains_chain_code?
+    ff9_dialog_game_interpreter_command_101
   end
   
   #--------------------------------------------------------------------------
   # * Determine if Message Contains Chain Code                       [Custom]
   #--------------------------------------------------------------------------
   def message_contains_chain_code?
-    text_content = []
-    command_list = @list
     current_index = @index + 1
     
-    while current_index < command_list.size &&
-          command_list[current_index].code == 401
-      text_content << command_list[current_index].parameters[0]
+    while (current_index < @list.size && @list[current_index].code == 401)
+      return true if @list[current_index].parameters[0].match(/\\bmc\[/i)
       current_index += 1
     end
     
-    !!(text_content.join('').match(/\\bmc\[/i))
+    false
   end
   
   #--------------------------------------------------------------------------
@@ -587,15 +619,12 @@ class Game_Interpreter
   #--------------------------------------------------------------------------
   def process_chained_messages
     wait_for_message
-    message_params = @params
-    $game_message.face_name = message_params[0]
-    $game_message.face_index = message_params[1]
-    $game_message.background = message_params[2]
-    $game_message.position = message_params[3]
+    $game_message.face_name = @params[0]
+    $game_message.face_index = @params[1]
+    $game_message.background = @params[2]
+    $game_message.position = @params[3]
     
-    collect_all_chained_messages.each do |message_text|
-      $game_message.add(message_text)
-    end
+    collect_all_chained_messages.each { |text| $game_message.add(text) }
     
     handle_post_message_commands
     wait_for_message
@@ -607,21 +636,22 @@ class Game_Interpreter
   def collect_all_chained_messages
     collected_messages = []
     current_index = @index
-    command_list = @list
     
-    while current_index < command_list.size
-      command = command_list[current_index]
-      break unless command.code == 101
+    while current_index < @list.size
+      break unless @list[current_index].code == 101
       
       message_text, next_index = collect_single_message_text(current_index)
+      has_forbidden = contains_forbidden_codes?(message_text)
       
-      if collected_messages.empty? ||
-         !contains_forbidden_codes?(message_text)
-        collected_messages << message_text
-      else
-        break
+      if (collected_messages.empty? && has_forbidden)
+        @index = next_index - 1
+        current_index = next_index
+        next
       end
       
+      break if (!collected_messages.empty? && has_forbidden)
+      
+      collected_messages << message_text
       @index = next_index - 1
       current_index = next_index
     end
@@ -635,19 +665,15 @@ class Game_Interpreter
   def collect_single_message_text(start_index)
     text_content = []
     current_index = start_index + 1
-    command_list = @list
     
-    while current_index < command_list.size &&
-          command_list[current_index].code == 401
-      text_content << command_list[current_index].parameters[0]
+    while (current_index < @list.size && @list[current_index].code == 401)
+      text_content << @list[current_index].parameters[0]
       current_index += 1
     end
     
-    if current_index < command_list.size
-      case command_list[current_index].code
-      when 102, 103, 104
-        current_index += 1
-      end
+    if (current_index < @list.size && 
+       [102, 103, 104].include?(@list[current_index].code))
+      current_index += 1
     end
     
     [text_content.join("\n"), current_index]
@@ -657,32 +683,254 @@ class Game_Interpreter
   # * Determine if Text Contains Forbidden Codes                     [Custom]
   #--------------------------------------------------------------------------
   def contains_forbidden_codes?(text)
-    forbidden_patterns = [/\\bm\[/i, /\\bmc\[/i, /\\bmd\[/i, /\\bmp\[/i]
-    forbidden_patterns.any? { |pattern| text.match(pattern) }
+    [/\\bm\[/i, /\\bmc\[/i, /\\bmd\[/i, /\\bmp\[/i].any? do |pattern|
+      text.match(pattern)
+    end
   end
   
   #--------------------------------------------------------------------------
   # * Handle Post Message Commands                                   [Custom]
   #--------------------------------------------------------------------------
   def handle_post_message_commands
-    command_list = @list
     next_index = @index + 1
-    return unless next_index < command_list.size
+    return unless next_index < @list.size
     
-    case command_list[next_index].code
-    when 102
-      @index = next_index
-      setup_choices(command_list[next_index].parameters)
-    when 103
-      @index = next_index
-      setup_num_input(command_list[next_index].parameters)
-    when 104
-      @index = next_index
-      setup_item_choice(command_list[next_index].parameters)
+    command_code = @list[next_index].code
+    return unless [102, 103, 104].include?(command_code)
+    
+    @index = next_index
+    params = @list[next_index].parameters
+    
+    case command_code
+    when 102 then setup_choices(params)
+    when 103 then setup_num_input(params)
+    when 104 then setup_item_choice(params)
     end
   end
   
 end # Game_Interpreter
+
+#==============================================================================
+# ** Sprite_BubbleTag
+#------------------------------------------------------------------------------
+#  This sprite class manages bubble tag arrow sprites with optional shadow
+#  support. It consolidates both the main bubble sprite and shadow sprite
+#  into a single object for easier management.
+#==============================================================================
+
+unless $imported[:hammy_ff9_choice_window]
+  class Sprite_BubbleTag < Sprite
+    #--------------------------------------------------------------------------
+    # * Object Initialization                                          [Custom]
+    #--------------------------------------------------------------------------
+    def initialize(window_class)
+      super(nil)
+      @config_module = get_config_module(window_class)
+      @shadow_sprite = nil
+      @shadow_config = @config_module::SHADOW_POSITION.dup
+      @bitmap_name = nil
+      @shadow_bitmap_name = nil
+      @last_windowskin_color = nil
+      @last_shadow_enabled = nil
+      @graphics_width = Graphics.width
+      
+      self.visible = false
+      update_bitmaps
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Get Config Module from Window Class                            [Custom]
+    #--------------------------------------------------------------------------
+    def get_config_module(window_class)
+      case window_class
+      when Window_ChoiceList
+        CONFIG::FF9_CHOICES
+      when Window_Message
+        CONFIG::FF9_DIALOG
+      else
+        CONFIG::FF9_DIALOG
+      end
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Free                                                           [Custom]
+    #--------------------------------------------------------------------------
+    def dispose
+      dispose_shadow
+      super
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Frame Update                                                   [Custom]
+    #--------------------------------------------------------------------------
+    def update
+      super
+      update_bitmaps
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Update Bitmaps                                                 [Custom]
+    #--------------------------------------------------------------------------
+    def update_bitmaps
+      current_color = $game_system.windowskin_color rescue nil
+      window_shadows = $game_system.window_shadows rescue false
+      current_shadows = ($imported[:hammy_window_shadows] && window_shadows)
+      
+      update_arrow_bitmap(current_color)
+      update_shadow_bitmap(current_shadows)
+      @last_shadow_enabled = current_shadows
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Update Arrow Bitmap                                            [Custom]
+    #--------------------------------------------------------------------------
+    def update_arrow_bitmap(current_color)
+      sprite_name = if ($imported[:hammy_ff9_windowskin_system] && 
+                        current_color)
+                      color = (current_color == :blue) ? :blue : :grey
+                      (@config_module::BUBBLE_ARROWS_COLORED[color] || 
+                      @config_module::BUBBLE_SPRITESHEET)
+                    else
+                      @config_module::BUBBLE_SPRITESHEET
+                    end
+      
+      return if @bitmap_name == sprite_name
+      self.bitmap = Cache.system(sprite_name)
+      @bitmap_name = sprite_name
+      @last_windowskin_color = current_color
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Update Shadow Bitmap                                           [Custom]
+    #--------------------------------------------------------------------------
+    def update_shadow_bitmap(current_shadows)
+      shadow_sprite_name = @config_module::SHADOW_SPRITESHEET
+      
+      if current_shadows
+        unless @shadow_sprite
+          @shadow_sprite = Sprite.new(viewport)
+          @shadow_sprite.visible = false
+          @shadow_sprite.opacity = @shadow_config[:shadow_opacity]
+        end
+        
+        unless (@shadow_sprite.bitmap && 
+               @shadow_bitmap_name == shadow_sprite_name)
+          @shadow_sprite.bitmap = Cache.system(shadow_sprite_name)
+          @shadow_bitmap_name = shadow_sprite_name
+        end
+      elsif (!current_shadows && @shadow_sprite)
+        dispose_shadow
+      end
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Dispose Shadow Sprite                                          [Custom]
+    #--------------------------------------------------------------------------
+    def dispose_shadow
+      if @shadow_sprite
+        @shadow_sprite.dispose
+        @shadow_sprite = nil
+        @shadow_bitmap_name = nil
+      end
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Viewport                                                   [Custom]
+    #--------------------------------------------------------------------------
+    def viewport=(viewport)
+      super
+      @shadow_sprite.viewport = viewport if @shadow_sprite
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Z Coordinate                                               [Custom]
+    #--------------------------------------------------------------------------
+    def z=(z)
+      super
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Shadow Z Coordinate                                        [Custom]
+    #--------------------------------------------------------------------------
+    def shadow_z=(z)
+      @shadow_sprite.z = z if @shadow_sprite
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Visibility                                                 [Custom]
+    #--------------------------------------------------------------------------
+    def visible=(visible)
+      super
+      
+      if @shadow_sprite
+        @shadow_sprite.visible = (visible && 
+          $imported[:hammy_window_shadows] && 
+          ($game_system.window_shadows rescue false))
+      end
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Source Rectangle                                           [Custom]
+    #--------------------------------------------------------------------------
+    def src_rect=(rect)
+      super
+      update_shadow_position if @shadow_sprite
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Source Rectangle Coordinates                               [Custom]
+    #--------------------------------------------------------------------------
+    def set_src_rect(x, y, width, height)
+      self.src_rect.set(x, y, width, height)
+      
+      if @shadow_sprite
+        @shadow_sprite.src_rect.set(x, y, width, height)
+      end
+      
+      update_shadow_position
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Update Shadow Position                                         [Custom]
+    #--------------------------------------------------------------------------
+    def update_shadow_position
+      return unless (@shadow_sprite && self.bitmap)
+      
+      source_rect = self.src_rect
+      base_x = @shadow_config[:shadow_offset_x]
+      base_y = @shadow_config[:shadow_offset_y]
+      
+      offset_x, offset_y = if (source_rect.x == 32 && source_rect.y == 32)
+                             [base_x * 2, base_y]
+                           elsif (source_rect.x == 0 && source_rect.y == 0)
+                             [base_x * 2, 0]
+                           else
+                             [base_x, base_y]
+                           end
+      
+      @shadow_sprite.x = self.x + offset_x
+      @shadow_sprite.y = self.y + offset_y
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Set Position                                                   [Custom]
+    #--------------------------------------------------------------------------
+    def set_position(x, y)
+      self.x = x
+      self.y = y
+      
+      update_shadow_position if @shadow_sprite
+    end
+    
+    #--------------------------------------------------------------------------
+    # * Get Shadow Sprite                                              [Custom]
+    #--------------------------------------------------------------------------
+    def shadow_sprite
+      @shadow_sprite
+    end
+    
+  end # unless $imported[:hammy_ff9_choice_window]
+end # Sprite_BubbleTag
 
 #==============================================================================
 # ** Window_Base
@@ -702,8 +950,7 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def convert_escape_characters(text)
     result = ff9_dialog_win_base_conv_esc_chars(text)
-    result = convert_specified_escape_characters(result)
-    return result
+    convert_specified_escape_characters(result)
   end
   
   #--------------------------------------------------------------------------
@@ -723,46 +970,34 @@ class Window_Base < Window
     result.gsub!(/\eIS\[(\d+)\]/i) { escape_icon_item($1.to_i, :skill) }
     result.gsub!(/\eIT\[(\d+)\]/i) { escape_icon_item($1.to_i, :state) }
     
-    return result
+    result
   end
   
   #--------------------------------------------------------------------------
   # * Build Named Icon Escape Sequence                               [Custom]
   #--------------------------------------------------------------------------
   def escape_icon_item(data_id, type)
-    case type
-    when :item
-      icon = $data_items[data_id].icon_index
-      name = $data_items[data_id].name
-    when :weapon
-      icon = $data_weapons[data_id].icon_index
-      name = $data_weapons[data_id].name
-    when :armour
-      icon = $data_armors[data_id].icon_index
-      name = $data_armors[data_id].name
-    when :skill
-      icon = $data_skills[data_id].icon_index
-      name = $data_skills[data_id].name
-    when :state
-      icon = $data_states[data_id].icon_index
-      name = $data_states[data_id].name
-    else
-      return ""
-    end
+    data_object = case type
+                  when :item   then $data_items[data_id]
+                  when :weapon then $data_weapons[data_id]
+                  when :armour then $data_armors[data_id]
+                  when :skill  then $data_skills[data_id]
+                  when :state  then $data_states[data_id]
+                  else return ''
+                  end
     
-    return "\eI[#{icon}]" + name
+    "\\eI[#{data_object.icon_index}]#{data_object.name}"
   end
   
   #--------------------------------------------------------------------------
-  # * Control Character Processing
+  # * Control Character Processing                                    [Alias]
   #--------------------------------------------------------------------------
   def process_escape_character(code, text, pos)
-    case code.upcase
-    when 'PIC'
-      text.sub!(/\[(.*?)\]/, "")
+    if code.upcase == 'PIC'
+      text.sub!(/\[(.*?)\]/, '')
       bitmap = Cache.picture($1.to_s)
-      rect = Rect.new(0, 0, bitmap.width, bitmap.height)
-      contents.blt(pos[:x], pos[:y], bitmap, rect)
+      contents.blt(pos[:x], pos[:y], bitmap, 
+                   Rect.new(0, 0, bitmap.width, bitmap.height))
     else
       ff9_dialog_win_base_proc_esc_char(code, text, pos)
     end
@@ -802,24 +1037,16 @@ class Window_Message < Window_Base
     @graphics_width = Graphics.width
     @graphics_height = Graphics.height
     @is_scene_map = SceneManager.scene_is?(Scene_Map)
-    
     @line_height = CONFIG::FF9_DIALOG::LINE_HEIGHT
     @standard_padding = CONFIG::FF9_DIALOG::STANDARD_PADDING
     @compact_spacing = CONFIG::FF9_DIALOG::COMPACT_SPACING
     @compact_line_height = CONFIG::FF9_DIALOG::COMPACT_LINE_HEIGHT
-    
     @character_sprites = {}
     @auto_skip_disabled = false
     
     ff9_dialog_win_msg_initialize
-    initialize_bubble_system
-  end
-  
-  #--------------------------------------------------------------------------
-  # * Initialize Bubble System                                       [Custom]
-  #--------------------------------------------------------------------------
-  def initialize_bubble_system
-    @bubble_sprite = nil
+    
+    @bubble_tag = nil
     @event_id = nil
     @bubble_position = nil
     @bubble_direction = nil
@@ -827,16 +1054,19 @@ class Window_Message < Window_Base
     @intended_window_y = nil
     @is_bubble_mode = false
     @chain_mode = false
-    load_bubble_config
+    @bubble_config = CONFIG::FF9_DIALOG::BUBBLE_POSITION.dup
   end
   
   #--------------------------------------------------------------------------
-  # * Load Bubble Configuration                                      [Custom]
+  # * Set Bubble Tag Sprite                                          [Custom]
   #--------------------------------------------------------------------------
-  def load_bubble_config
-    position_config = CONFIG::FF9_DIALOG::BUBBLE_POSITION
-    arrows_config = CONFIG::FF9_DIALOG::BUBBLE_ARROWS
-    @bubble_config = position_config.merge(arrows_config)
+  def set_bubble_tag(bubble_tag)
+    @bubble_tag = bubble_tag
+    if @bubble_tag
+      @bubble_tag.viewport = self.viewport
+      @bubble_tag.z = self.z + 1
+      @bubble_tag.shadow_z = self.z
+    end
   end
   
   #--------------------------------------------------------------------------
@@ -847,9 +1077,8 @@ class Window_Message < Window_Base
     super
     offset_x = self.x - old_x
     
-    if offset_x != 0
-      @character_sprites.each_key { |sprite| sprite.x += offset_x }
-    end
+    return if offset_x == 0
+    @character_sprites.each_key { |sprite| sprite.x += offset_x }
   end
   
   #--------------------------------------------------------------------------
@@ -860,9 +1089,8 @@ class Window_Message < Window_Base
     super
     offset_y = self.y - old_y
     
-    if offset_y != 0
-      @character_sprites.each_key { |sprite| sprite.y += offset_y }
-    end
+    return if offset_y == 0
+    @character_sprites.each_key { |sprite| sprite.y += offset_y }
   end
   
   #--------------------------------------------------------------------------
@@ -870,15 +1098,14 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def z=(z)
     super
-    z_value = self.z
-    @character_sprites.each_key { |sprite| sprite.z = z_value }
+    @character_sprites.each_key { |sprite| sprite.z = self.z }
   end
   
   #--------------------------------------------------------------------------
   # * Set Pause                                                       [Super]
   #--------------------------------------------------------------------------
   def pause=(value)
-    @event_pop_id ? super(false) : super(value)
+    super(@event_pop_id ? false : value)
   end
   
   #--------------------------------------------------------------------------
@@ -906,8 +1133,7 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def close
     ff9_dialog_win_msg_close
-    return unless @is_scene_map && @event_pop_id
-    
+    return unless (@is_scene_map && @event_pop_id)
     @event_pop_id = nil
     @bubble_direction = nil
     @bubble_position = nil
@@ -936,12 +1162,8 @@ class Window_Message < Window_Base
   # * Dispose Bubble Sprite                                          [Custom]
   #--------------------------------------------------------------------------
   def dispose_bubble_sprite
-    if @bubble_sprite
-      @bubble_sprite.bitmap.dispose if @bubble_sprite.bitmap
-      @bubble_sprite.dispose
-      @bubble_sprite = nil
-    end
-    
+    @bubble_tag.visible = false if @bubble_tag
+    @bubble_tag = nil
     @event_id = nil
     @is_bubble_mode = false
   end
@@ -985,6 +1207,11 @@ class Window_Message < Window_Base
     @is_bubble_mode = !@event_id.nil?
     
     if @is_bubble_mode
+      unless @bubble_tag
+        bubble_tag = SceneManager.scene.get_bubble_tag
+        set_bubble_tag(bubble_tag)
+      end
+      
       update_bubble_position
     else
       fix_default_message
@@ -1014,15 +1241,13 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def calc_bubble_position(character)
     if self.width < @bubble_config[:narrow_width]
-      bitmap = @bubble_sprite && @bubble_sprite.bitmap
-      bubble_width = bitmap ? bitmap.width : 32
-      bubble_center = character.screen_x + bubble_width / 2
+      bubble_center = character.screen_x + 16
       @intended_window_x = bubble_center - self.width / 2
     else
       @intended_window_x = character.screen_x - self.width / 2
     end
     
-    @intended_window_y = character.screen_y - self.height +
+    @intended_window_y = character.screen_y - self.height + 
                          @bubble_config[:y_offset_above]
   end
   
@@ -1039,30 +1264,25 @@ class Window_Message < Window_Base
       update_bubble_y(character)
     end
     
-    max_x = @graphics_width - self.width
-    self.x = [[self.x, 0].max, max_x].min
+    self.x = [[self.x, 0].max, @graphics_width - self.width].min
   end
   
   #--------------------------------------------------------------------------
   # * Update Bubble Y Position                                       [Custom]
   #--------------------------------------------------------------------------
   def update_bubble_y(character)
-    char_y = character.screen_y
-    space_above = char_y
-    space_below = @graphics_height - char_y
-    
-    bitmap = @bubble_sprite && @bubble_sprite.bitmap
-    bubble_height = bitmap ? bitmap.height : 32
-    required_space = self.height + bubble_height
+    char_screen_y = character.screen_y
+    space_above = char_screen_y
+    space_below = @graphics_height - char_screen_y
+    required_space = self.height + 32
     
     if required_space <= space_above
       self.y = @intended_window_y
     elsif required_space <= space_below
-      self.y = char_y + @bubble_config[:y_offset_below]
-    elsif space_above >= space_below
-      self.y = @intended_window_y
+      self.y = char_screen_y + @bubble_config[:y_offset_below]
     else
-      self.y = char_y + @bubble_config[:y_offset_below]
+      self.y = space_above >= space_below ? @intended_window_y : 
+               char_screen_y + @bubble_config[:y_offset_below]
     end
   end
   
@@ -1083,7 +1303,7 @@ class Window_Message < Window_Base
   def update
     ff9_dialog_win_msg_update
     update_character_sprites
-    update_bubble_visibility if @bubble_sprite
+    update_bubble_visibility if @bubble_tag
   end
   
   #--------------------------------------------------------------------------
@@ -1092,16 +1312,14 @@ class Window_Message < Window_Base
   def update_character_sprites
     @character_sprites.each do |sprite, parameters|
       next if parameters.empty?
-      
-      remaining_frames = parameters[0]
-      total_frames = parameters[1]
+      remaining_frames, total_frames = parameters
       parameters[0] = @show_fast ? 0 : remaining_frames - 1
       
       if parameters[0] > 0
-        sprite.opacity = 256 * (total_frames - parameters[0]) / total_frames
+        sprite.opacity = (256 * (total_frames - parameters[0]) / total_frames)
       else
-        sprite_x = sprite.x - self.x - padding
-        sprite_y = sprite.y - self.y - padding
+        sprite_x = (sprite.x - self.x - self.padding)
+        sprite_y = (sprite.y - self.y - self.padding)
         contents.blt(sprite_x, sprite_y, sprite.bitmap, sprite.src_rect)
         sprite.bitmap.clear
         sprite.visible = false
@@ -1114,7 +1332,9 @@ class Window_Message < Window_Base
   # * Update Bubble Visibility                                       [Custom]
   #--------------------------------------------------------------------------
   def update_bubble_visibility
-    @bubble_sprite.visible = self.openness == 255 if @bubble_sprite
+    return unless @bubble_tag
+    is_visible = self.openness == 255
+    @bubble_tag.visible = is_visible
   end
   
   #--------------------------------------------------------------------------
@@ -1149,7 +1369,7 @@ class Window_Message < Window_Base
   # * Wait After Output of One Character                              [Alias]
   #--------------------------------------------------------------------------
   def wait_for_one_character
-    while @char_timer < 60
+    until @char_timer >= 60
       ff9_dialog_win_msg_wait_one_char
       @char_timer += @text_speed
     end
@@ -1170,22 +1390,14 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def process_new_line(text, pos)
     @line_show_fast = false
-    
-    old_height = pos[:height]
     pos[:x] = pos[:new_x]
-    pos[:y] += old_height
-    
-    if @compact_spacing
-      next_line = text.slice(/^.*$/).to_s
-
-      if next_line.strip.empty?
-        pos[:height] = @compact_line_height
-      else
-        pos[:height] = calc_line_height(text)
-      end
-    else
-      pos[:height] = calc_line_height(text)
-    end
+    pos[:y] += pos[:height]
+    pos[:height] = if (@compact_spacing && 
+                       text.slice(/^.*$/).to_s.strip.empty?)
+                     @compact_line_height
+                   else
+                     calc_line_height(text)
+                   end
     
     if need_new_page?(text, pos)
       input_pause
@@ -1204,8 +1416,8 @@ class Window_Message < Window_Base
     adjust_dialog(all_text)
     ff9_dialog_win_msg_process_all_text
     
-    Fiber.yield until @show_fast || @character_sprites.all? do |*, params|
-      params.empty?
+    until (@show_fast || @character_sprites.all? { |*, params| params.empty? })
+      Fiber.yield
     end
   end
   
@@ -1213,9 +1425,8 @@ class Window_Message < Window_Base
   # * Adjust Pop Message                                             [Custom]
   #--------------------------------------------------------------------------
   def adjust_dialog(text = ' ')
-    return unless @is_scene_map && @event_pop_id
-    
-    self.height = calculate_window_dimensions + standard_padding * 2
+    return unless (@is_scene_map && @event_pop_id)
+    self.height = calculate_window_dimensions + (standard_padding * 2)
     create_contents
     update_placement
   end
@@ -1250,7 +1461,7 @@ class Window_Message < Window_Base
   # * Set Up Event Pop Message                                       [Custom]
   #--------------------------------------------------------------------------
   def event_dialog_setup(event_id, chain_mode = false)
-    if event_id && !target_character(event_id)
+    if (event_id && !target_character(event_id))
       @event_pop_id = nil
       @chain_mode = false
     else
@@ -1295,7 +1506,7 @@ class Window_Message < Window_Base
     loop do
       Fiber.yield
       break if Input.trigger?(:C)
-      break if @event_pop_id.nil? && Input.trigger?(:B)
+      break if (@event_pop_id.nil? && Input.trigger?(:B))
     end
     
     Input.update
@@ -1307,9 +1518,8 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def settings_changed?
     return true if @event_pop_id
-    
-    @background != $game_message.background ||
-      @position != $game_message.position
+    (@background != $game_message.background || 
+     @position != $game_message.position)
   end
   
   #--------------------------------------------------------------------------
@@ -1331,21 +1541,15 @@ class Window_Message < Window_Base
     total_height = 0
     
     all_text.each_line do |line|
-      # Remove all control codes before width calculation
       temp_string = remove_control_codes_for_width(line)
       temp_string = convert_escape_characters(temp_string)
-      # Remove escape sequences that may have been created during conversion
       temp_string = remove_escape_sequences(temp_string)
       icon_count = line.scan(/\\i\[\d{0,3}\]/).length
       text_width = text_size(temp_string).width + (icon_count * 24)
       
-      self.width = [text_width + standard_padding * 2, self.width].max
-      
-      if @compact_spacing && line.strip.empty?
-        total_height += @compact_line_height
-      else
-        total_height += line_height
-      end
+      self.width = [text_width + (standard_padding * 2), self.width].max
+      total_height += ((@compact_spacing && line.strip.empty?) ? 
+                       @compact_line_height : line_height)
     end
     
     total_height
@@ -1356,33 +1560,20 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def remove_control_codes_for_width(text)
     result = text.dup
-    # Remove icon codes first (handled separately with icon_count)
     result.gsub!(/\\i\[\d{0,3}\]/i, '')
-    # Remove single-character control codes: \., \|, \$, \^, \!, \>, \<, \{, \}, \\, \A
-    # These match the pattern from obtain_escape_code: \$\.\|\^!><\{\}\\
     result.gsub!(/\\([\.\|\$\^!><\{\}\\]|A)/i, '')
-    # Remove multi-character control codes with brackets: \w[60], \sp[30], \ed[12], \C[1], etc.
-    # Pattern: \ + one or more letters + [ + one or more digits + ]
     result.gsub!(/\\([A-Z]+)\[\d+\]/i, '')
-    # Remove multi-character control codes without brackets (standalone codes like \C, \I, etc.)
-    # Pattern: \ + one or more letters, not followed by [ or digit
-    # Use negative lookahead to ensure we don't match codes that have brackets
     result.gsub!(/\\([A-Z]+)(?![\[\d])/i, '')
     result
   end
   
   #--------------------------------------------------------------------------
-  # * Remove Escape Sequences After Conversion                        [Custom]
+  # * Remove Escape Sequences After Conversion                       [Custom]
   #--------------------------------------------------------------------------
   def remove_escape_sequences(text)
     result = text.dup
-    # Remove single-character escape codes: \e., \e|, \e$, \e^, \e!, \e>, \e<, \e{, \e}, \e\, \eA
-    # After convert_escape_characters, \ becomes \e, so \. becomes \e.
     result.gsub!(/\e([\.\|\$\^!><\{\}\\]|A)/i, '')
-    # Remove multi-character escape codes with brackets: \eW[60], \eSP[30], \eED[12], \eC[1], etc.
     result.gsub!(/\e([A-Z]+)\[\d+\]/i, '')
-    # Remove multi-character escape codes without brackets
-    # Use negative lookahead to ensure we don't match codes that have brackets
     result.gsub!(/\e([A-Z]+)(?![\[\d])/i, '')
     result
   end
@@ -1391,16 +1582,12 @@ class Window_Message < Window_Base
   # * Calculate Text Height                                          [Custom]
   #--------------------------------------------------------------------------
   def calculate_text_height
-    all_text = $game_message.all_text
-    return 0 unless all_text
-    
+    return 0 unless $game_message.all_text
     total_height = 0
-    all_text.each_line do |line|
-      if @compact_spacing && line.strip.empty?
-        total_height += @compact_line_height
-      else
-        total_height += line_height
-      end
+    
+    $game_message.all_text.each_line do |line|
+      total_height += ((@compact_spacing && line.strip.empty?) ? 
+                       @compact_line_height : line_height)
     end
     
     [total_height, 1].max
@@ -1410,14 +1597,12 @@ class Window_Message < Window_Base
   # * Get Target Character                                           [Custom]
   #--------------------------------------------------------------------------
   def target_character(event_id)
-    return nil unless event_id
+    return unless event_id
     
-    if event_id == 0
-      $game_player
-    elsif event_id > 0
-      $game_map.events[event_id]
-    else
-      $game_player.followers[event_id.abs - 1]
+    case
+    when event_id == 0 then $game_player
+    when event_id > 0 then $game_map.events[event_id]
+    else $game_player.followers[event_id.abs - 1]
     end
   end
   
@@ -1426,13 +1611,10 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def arrow_left?(character)
     return @bubble_direction == :left if @bubble_direction
+    return false if character.direction == 4
+    return true if character.direction == 6
+    return true if (@intended_window_x.nil? || self.x == @intended_window_x)
     
-    case character.direction
-    when 4 then return false
-    when 6 then return true
-    end
-    
-    return true if @intended_window_x.nil? || self.x == @intended_window_x
     self.x < @intended_window_x
   end
   
@@ -1440,86 +1622,65 @@ class Window_Message < Window_Base
   # * Create Bubble Sprite                                           [Custom]
   #--------------------------------------------------------------------------
   def create_bubble_sprite(vertical_up, horizontal_left, character)
-    dispose_bubble_sprite
+    return unless @bubble_tag
     
-    @bubble_sprite = Sprite.new
-    @bubble_sprite.z = self.z + 1
-    
-    sprite_name = bubble_sprite_name(vertical_up, horizontal_left)
-    @bubble_sprite.bitmap = Cache.system(sprite_name)
+    x = horizontal_left ? 0 : 32
+    y = vertical_up ? 0 : 32
+    @bubble_tag.set_src_rect(x, y, 32, 32)
     
     update_bubble_sprite_position(vertical_up, horizontal_left, character)
     update_bubble_visibility
   end
   
   #--------------------------------------------------------------------------
-  # * Get Bubble Sprite Name                                         [Custom]
-  #--------------------------------------------------------------------------
-  def bubble_sprite_name(vertical_up, horizontal_left)
-    direction = vertical_up ? :up : :down
-    position = horizontal_left ? :left : :right
-    base_key = "#{direction}_#{position}".to_sym
-    
-    if $imported[:hammy_ff9_windowskin_system]
-      color = $game_system.windowskin_color == :blue ? :blue : :grey
-      colored_key = "#{base_key}_#{color}".to_sym
-      
-      sprite_name = CONFIG::FF9_DIALOG::BUBBLE_ARROWS_COLORED[colored_key]
-      return sprite_name if sprite_name
-    end
-    
-    @bubble_config[base_key]
-  end
-  
-  #--------------------------------------------------------------------------
   # * Update Bubble Sprite Position                                  [Custom]
   #--------------------------------------------------------------------------
   def update_bubble_sprite_position(vertical_up, horizontal_left, character)
-    return unless @bubble_sprite && @bubble_sprite.bitmap
+    return unless (@bubble_tag && @bubble_tag.bitmap)
     
-    bitmap = @bubble_sprite.bitmap
+    @bubble_tag.z = self.z + 1
+    @bubble_tag.shadow_z = self.z
     
-    if vertical_up
-      @bubble_sprite.y = y - bitmap.height + 
-                        @bubble_config[:tag_y_offset_above]
-    else
-      @bubble_sprite.y = y + self.height + 
-                        @bubble_config[:tag_y_offset_below]
-    end
+    bubble_y = vertical_up ? 
+               self.y - 32 + 
+               @bubble_config[:tag_y_offset_above] : 
+               self.y + self.height + @bubble_config[:tag_y_offset_below]
     
-    bubble_width = bitmap.width
-    char_x = character.screen_x
-    @bubble_sprite.x = horizontal_left ? char_x : char_x - bubble_width
+    char_screen_x = character.screen_x
+    bubble_x = horizontal_left ? char_screen_x : char_screen_x - 32
+    @bubble_tag.set_position(bubble_x, bubble_y)
     
     unless @bubble_direction
-      adjust_bubble_sprite(vertical_up, horizontal_left, character,
-                           bubble_width)
+      adjust_bubble_sprite(vertical_up, horizontal_left, character)
     end
   end
   
   #--------------------------------------------------------------------------
   # * Adjust Bubble Sprite                                           [Custom]
   #--------------------------------------------------------------------------
-  def adjust_bubble_sprite(vertical_up, horizontal_left, character,
-                           bubble_width)
+  def adjust_bubble_sprite(vertical_up, horizontal_left, character)
     original_left = horizontal_left
-    char_x = character.screen_x
+    char_screen_x = character.screen_x
+    max_x = @graphics_width - 32
     
-    if char_x <= bubble_width
+    if char_screen_x <= 32
       horizontal_left = true
-      @bubble_sprite.x = char_x
-    elsif char_x >= @graphics_width - bubble_width
+      bubble_x = char_screen_x
+    elsif char_screen_x >= max_x
       horizontal_left = false
-      @bubble_sprite.x = char_x - bubble_width
+      bubble_x = char_screen_x - 32
+    else
+      bubble_x = @bubble_tag.x
     end
     
     if horizontal_left != original_left
-      sprite_name = bubble_sprite_name(vertical_up, horizontal_left)
-      @bubble_sprite.bitmap = Cache.system(sprite_name)
+      source_x = horizontal_left ? 0 : 32
+      source_y = vertical_up ? 0 : 32
+      @bubble_tag.set_src_rect(source_x, source_y, 32, 32)
     end
     
-    max_x = @graphics_width - bubble_width
-    @bubble_sprite.x = [[@bubble_sprite.x, 0].max, max_x].min
+    bubble_x = [[bubble_x, 0].max, max_x].min
+    @bubble_tag.set_position(bubble_x, @bubble_tag.y)
   end
   
   #--------------------------------------------------------------------------
@@ -1529,16 +1690,10 @@ class Window_Message < Window_Base
     text_width = text_size(c).width
     draw_width = text_width * 2
     
-    unless $game_system.message_fading
+    if (!$game_system.message_fading || @show_fast || @text_speed == 0)
       draw_text(pos[:x], pos[:y], draw_width, pos[:height], c)
       pos[:x] += text_width
-      wait_for_one_character
-      return
-    end
-    
-    if @show_fast || @text_speed == 0
-      draw_text(pos[:x], pos[:y], draw_width, pos[:height], c)
-      pos[:x] += text_width
+      wait_for_one_character unless $game_system.message_fading
       return
     end
     
@@ -1553,8 +1708,8 @@ class Window_Message < Window_Base
   # * Icon Drawing Process by Control Characters                      [Super]
   #--------------------------------------------------------------------------
   def process_draw_icon(icon_index, pos)
-    message_fading = $game_system.message_fading
-    return super if @show_fast || @text_speed == 0 || !message_fading
+    return super if (@show_fast || @text_speed == 0 || 
+                    !$game_system.message_fading)
     
     sprite = get_empty_sprite(pos)
     bitmap = Cache.system("Iconset")
@@ -1568,8 +1723,7 @@ class Window_Message < Window_Base
   # * Get Unused Character Sprite                                    [Custom]
   #--------------------------------------------------------------------------
   def get_empty_sprite(pos)
-    sprite, = @character_sprites.find {|*, params| params.empty? }
-    
+    sprite, = @character_sprites.find { |*, params| params.empty? }
     if sprite
       sprite.visible = true
       
@@ -1583,9 +1737,7 @@ class Window_Message < Window_Base
     end
     
     sprite.bitmap ||= Bitmap.new(pos[:height], pos[:height])
-    parameters = []
-    parameters << @effect_duration << @effect_duration
-    @character_sprites[sprite] = parameters
+    @character_sprites[sprite] = [@effect_duration, @effect_duration]
     
     sprite.x = self.x + self.padding + pos[:x]
     sprite.y = self.y + self.padding + pos[:y]
@@ -1601,8 +1753,7 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def obtain_escape_code(text)
     code = ff9_dialog_win_msg_obtain_escape_code(text)
-    
-    if code && code[0].upcase == 'A' && code.length > 1
+    if (code && code[0].upcase == 'A' && code.length > 1)
       text.insert(0, code[1..-1])
       code = code[0]
     end
@@ -1616,8 +1767,7 @@ class Window_Message < Window_Base
   def process_escape_character(code, text, pos)
     case code.upcase
     when 'W'
-      duration = obtain_escape_param(text)
-      wait_message(duration) unless @show_fast
+      wait_message(obtain_escape_param(text)) unless @show_fast
     when '.'
       wait_message(15) unless @show_fast
     when '|'
@@ -1634,6 +1784,74 @@ class Window_Message < Window_Base
   end
   
 end # Window_Message
+
+#==============================================================================
+# ** Scene_Map
+#------------------------------------------------------------------------------
+#  This class performs the map screen processing.
+#==============================================================================
+
+class Scene_Map < Scene_Base
+  unless $imported[:hammy_ff9_choice_window]
+    #------------------------------------------------------------------------
+    # * Alias Method Definitions                                     [Custom]
+    #------------------------------------------------------------------------
+    alias_method :ff9_dialog_scene_map_start, :start
+    alias_method :ff9_dialog_scene_map_update, :update
+    alias_method :ff9_dialog_scene_map_terminate, :terminate
+    
+    #------------------------------------------------------------------------
+    # * Start Processing                                              [Alias]
+    #------------------------------------------------------------------------
+    def start
+      ff9_dialog_scene_map_start
+      get_bubble_tag
+    end
+    
+    #------------------------------------------------------------------------
+    # * Frame Update                                                  [Alias]
+    #------------------------------------------------------------------------
+    def update
+      ff9_dialog_scene_map_update
+      @bubble_tag.update if @bubble_tag
+    end
+    
+    #------------------------------------------------------------------------
+    # * Termination Processing                                        [Alias]
+    #------------------------------------------------------------------------
+    def terminate
+      dispose_bubble_tag if @bubble_tag
+      ff9_dialog_scene_map_terminate
+    end
+    
+    #------------------------------------------------------------------------
+    # * Initialize Bubble Tag Sprite                                 [Custom]
+    #------------------------------------------------------------------------
+    def initialize_bubble_tag
+      return if @bubble_tag
+      @bubble_tag = Sprite_BubbleTag.new(Window_Message)
+    end
+    
+    #------------------------------------------------------------------------
+    # * Dispose Bubble Tag Sprite                                    [Custom]
+    #------------------------------------------------------------------------
+    def dispose_bubble_tag
+      if @bubble_tag
+        @bubble_tag.dispose
+        @bubble_tag = nil
+      end
+    end
+    
+    #------------------------------------------------------------------------
+    # * Get Bubble Tag Sprite                                        [Custom]
+    #------------------------------------------------------------------------
+    def get_bubble_tag
+      initialize_bubble_tag unless @bubble_tag
+      @bubble_tag
+    end
+    
+  end # unless $imported[:hammy_ff9_choice_window]
+end # Scene_Map
 
 #==============================================================================
 # 
