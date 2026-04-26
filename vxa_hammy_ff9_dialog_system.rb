@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - FF9 Dialog System v1.01
+# ▼ Hammy - FF9 Dialog System v1.02
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 06.12.2025
+# -- Last Updated: 26.04.2026
 # -- Requires: None
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Jupiter Penguin (Message Effects, fade effect),
@@ -16,6 +16,13 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 26.04.2026 - Fixed asymmetric window padding and icon clipping by compensating
+#              for RGSS3 text_size() overhang and correcting the escape code
+#              stripping sequence. Resolved \a greedy text consumption, \pic
+#              crash/positioning bug, and \ii[n] family rendering failure.
+#              Optimized message processing with a lightweight prescan, removed
+#              redundant conversion passes, and aligned character drawing with
+#              Text Cache recommendations. (v1.02)
 # 06.12.2025 - Consolidated arrow images into a single spritesheet,
 #              refactored bubble tag and shadow sprites into Sprite_BubbleTag
 #              class for centralized management, cached shared sprite in
@@ -986,7 +993,7 @@ class Window_Base < Window
                   else return ''
                   end
     
-    "\\eI[#{data_object.icon_index}]#{data_object.name}"
+    "\eI[#{data_object.icon_index}]#{data_object.name}"
   end
   
   #--------------------------------------------------------------------------
@@ -994,10 +1001,12 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def process_escape_character(code, text, pos)
     if code.upcase == 'PIC'
-      text.sub!(/\[(.*?)\]/, '')
-      bitmap = Cache.picture($1.to_s)
-      contents.blt(pos[:x], pos[:y], bitmap, 
-                   Rect.new(0, 0, bitmap.width, bitmap.height))
+      if text.sub!(/\[(.*?)\]/, '')
+        bitmap = Cache.picture($1)
+        contents.blt(pos[:x], pos[:y], bitmap,
+                     Rect.new(0, 0, bitmap.width, bitmap.height))
+        pos[:x] += bitmap.width
+      end
     else
       ff9_dialog_win_base_proc_esc_char(code, text, pos)
     end
@@ -1134,6 +1143,7 @@ class Window_Message < Window_Base
   def close
     ff9_dialog_win_msg_close
     return unless (@is_scene_map && @event_pop_id)
+    
     @event_pop_id = nil
     @bubble_direction = nil
     @bubble_position = nil
@@ -1411,13 +1421,33 @@ class Window_Message < Window_Base
   def process_all_text
     @event_pop_id = nil
     all_text = $game_message.all_text
-    convert_escape_characters(all_text)
+    
+    prescan_dialog_codes(all_text)
     update_placement
     adjust_dialog(all_text)
     ff9_dialog_win_msg_process_all_text
     
     until (@show_fast || @character_sprites.all? { |*, params| params.empty? })
       Fiber.yield
+    end
+  end
+  
+  #--------------------------------------------------------------------------
+  # * Pre-scan Dialog Escape Codes                                   [Custom]
+  #--------------------------------------------------------------------------
+  def prescan_dialog_codes(text)
+    @auto_skip_disabled = !!text.match(/\\a(?!\w)/i)
+    
+    if text.match(/\\bmc?\[([+-]?\d+)\]/i)
+      event_dialog_setup($1.to_i, !!text.match(/\\bmc\[/i))
+    end
+    
+    if text.match(/\\bmd\[([lLrR])\]/i)
+      bubble_direction_setup($1)
+    end
+    
+    if text.match(/\\bmp\[([aAbB])\]/i)
+      bubble_position_setup($1)
     end
   end
   
@@ -1536,16 +1566,14 @@ class Window_Message < Window_Base
   def calculate_window_dimensions
     all_text = $game_message.all_text
     return 0 unless all_text
-    
     self.width = 1
     total_height = 0
     
     all_text.each_line do |line|
-      temp_string = remove_control_codes_for_width(line)
-      temp_string = convert_escape_characters(temp_string)
+      temp_string = convert_escape_characters(line.dup)
+      icon_count = temp_string.scan(/\eI\[\d+\]/i).length
       temp_string = remove_escape_sequences(temp_string)
-      icon_count = line.scan(/\\i\[\d{0,3}\]/).length
-      text_width = text_size(temp_string).width + (icon_count * 24)
+      text_width = text_size(temp_string).width - 10 + 4 + (icon_count * 24)
       
       self.width = [text_width + (standard_padding * 2), self.width].max
       total_height += ((@compact_spacing && line.strip.empty?) ? 
@@ -1572,9 +1600,9 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def remove_escape_sequences(text)
     result = text.dup
-    result.gsub!(/\e([\.\|\$\^!><\{\}\\]|A)/i, '')
-    result.gsub!(/\e([A-Z]+)\[\d+\]/i, '')
-    result.gsub!(/\e([A-Z]+)(?![\[\d])/i, '')
+    result.gsub!(/\e[.|$^!><{}A]/i, '')
+    result.gsub!(/\e[A-Z]+\[\d+\]/i, '')
+    result.gsub!(/\e[A-Z]+/i, '')
     result
   end
   
@@ -1688,7 +1716,7 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def process_normal_character(c, pos)
     text_width = text_size(c).width
-    draw_width = text_width * 2
+    draw_width = text_width + 2
     
     if (!$game_system.message_fading || @show_fast || @text_speed == 0)
       draw_text(pos[:x], pos[:y], draw_width, pos[:height], c)
@@ -1696,7 +1724,7 @@ class Window_Message < Window_Base
       wait_for_one_character unless $game_system.message_fading
       return
     end
-    
+
     sprite = get_empty_sprite(pos)
     sprite.bitmap.font = contents.font.dup
     sprite.bitmap.draw_text(0, 0, draw_width, pos[:height], c)
@@ -1753,7 +1781,8 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def obtain_escape_code(text)
     code = ff9_dialog_win_msg_obtain_escape_code(text)
-    if (code && code[0].upcase == 'A' && code.length > 1)
+    
+    if code && code[0].upcase == 'A' && code.length > 1
       text.insert(0, code[1..-1])
       code = code[0]
     end
