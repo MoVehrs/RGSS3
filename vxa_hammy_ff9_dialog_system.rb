@@ -16,9 +16,8 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-
 # 28.04.2026 - Added compatibility for EST Auto Text Color Plus v1.2. and fixed
-#              \bmc chaining bug where the initial message was skipped.(v1.03)
+#              \bmc chaining bug where the initial message was skipped. (v1.03)
 # 26.04.2026 - Fixed asymmetric window padding and icon clipping by compensating
 #              for RGSS3 text_size() overhang and correcting the escape code
 #              stripping sequence. Resolved \a greedy text consumption, \pic
