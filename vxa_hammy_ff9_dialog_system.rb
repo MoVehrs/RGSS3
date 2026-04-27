@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - FF9 Dialog System v1.02
+# ▼ Hammy - FF9 Dialog System v1.03
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 26.04.2026
+# -- Last Updated: 28.04.2026
 # -- Requires: None
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Jupiter Penguin (Message Effects, fade effect),
@@ -16,6 +16,9 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+# 28.04.2026 - Added compatibility for EST Auto Text Color Plus v1.2. and fixed
+#              \bmc chaining bug where the initial message was skipped.(v1.03)
 # 26.04.2026 - Fixed asymmetric window padding and icon clipping by compensating
 #              for RGSS3 text_size() overhang and correcting the escape code
 #              stripping sequence. Resolved \a greedy text consumption, \pic
@@ -649,12 +652,6 @@ class Game_Interpreter
       
       message_text, next_index = collect_single_message_text(current_index)
       has_forbidden = contains_forbidden_codes?(message_text)
-      
-      if (collected_messages.empty? && has_forbidden)
-        @index = next_index - 1
-        current_index = next_index
-        next
-      end
       
       break if (!collected_messages.empty? && has_forbidden)
       
@@ -1881,6 +1878,37 @@ class Scene_Map < Scene_Base
     
   end # unless $imported[:hammy_ff9_choice_window]
 end # Scene_Map
+
+#==============================================================================
+# ** Compatibility Patch: EST Auto Text Color Plus v1.2
+#==============================================================================
+
+if defined?(ESTRIOLE) && defined?(ESTRIOLE::AUTOCOLOR)
+  #============================================================================
+  # ** Window_Base
+  #----------------------------------------------------------------------------
+  #  This is a super class of all windows within the game.
+  #============================================================================
+  
+  class Window_Base
+    #------------------------------------------------------------------------
+    # * Alias Method Definitions                                     [Custom]
+    #------------------------------------------------------------------------
+    alias_method :ff9_dialog_win_base_autocolor_fix, :convert_escape_characters
+    
+    #------------------------------------------------------------------------
+    # * Preconvert Control Characters                                 [Alias]
+    #------------------------------------------------------------------------
+    def convert_escape_characters(text)
+      result = ff9_dialog_win_base_autocolor_fix(text)
+      return result unless result.is_a?(String)
+      
+      result.gsub!(/(\eC\[\d+\]) /, '\1')
+      result
+    end
+    
+  end # Window_Base
+end # defined?(ESTRIOLE::AUTOCOLOR)
 
 #==============================================================================
 # 
