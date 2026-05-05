@@ -1,7 +1,7 @@
 #==============================================================================
-# ▼ Hammy - FF9 Dialog System v1.03
+# ▼ Hammy - FF9 Dialog System v1.04
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 28.04.2026
+# -- Last Updated: 05.05.2026
 # -- Requires: None
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Jupiter Penguin (Message Effects, fade effect),
@@ -16,6 +16,11 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# 05.05.2026 - Bubble positioning now dynamically resolves sprite height from
+#              Spriteset_Map to calculate the top of the target sprite, ensuring
+#              consistent spacing regardless of sprite dimensions. Fixed a bug
+#              where \w[n] parameters were rendered as visible text when message
+#              skipping was active. (v1.04)
 # 28.04.2026 - Added compatibility for EST Auto Text Color Plus v1.2. and fixed
 #              \bmc chaining bug where the initial message was skipped. (v1.03)
 # 26.04.2026 - Fixed asymmetric window padding and icon clipping by compensating
@@ -142,6 +147,9 @@ $imported[:hammy_ff9_dialog_system] = true
 # -----------------------------------------------------------------------------
 # ► Scene_Map (Class < Scene_Base)
 # -----------------------------------------------------------------------------
+# ★ Public Instance Variables:
+#   - spriteset (attr_reader)
+# 
 # ★ Alias Methods:
 #   - start → ff9_dialog_scene_map_start
 #   - update → ff9_dialog_scene_map_update
@@ -445,8 +453,9 @@ module CONFIG
     # 
     # y_offset_below: Vertical offset when window is positioned below character
     #   Distance in pixels from character screen_y to window top when below
-    # y_offset_above: Vertical offset when window is positioned above character
-    #   Distance in pixels from character screen_y to window bottom when above
+    # y_offset_above: Vertical gap when window is positioned above character
+    #   Distance in pixels from the top of the target sprite to the bottom of
+    #   the window. The sprite height is resolved dynamically from Spriteset_Map
     # tag_y_offset_below: Vertical offset when arrow is below window
     #   Distance in pixels from window bottom to arrow sprite position
     # tag_y_offset_above: Vertical offset when arrow is above window
@@ -456,7 +465,7 @@ module CONFIG
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_POSITION = {
       y_offset_below: 16,
-      y_offset_above: -48,
+      y_offset_above: 16,
       tag_y_offset_below: -10,
       tag_y_offset_above: 10,
       narrow_width: 56
@@ -1243,6 +1252,20 @@ class Window_Message < Window_Base
   end
   
   #--------------------------------------------------------------------------
+  # * Get Sprite Height for Character                                [Custom]
+  #--------------------------------------------------------------------------
+  def sprite_height_for_character(character)
+    scene = SceneManager.scene
+    return 32 unless scene.is_a?(Scene_Map) && scene.respond_to?(:spriteset)
+    
+    spriteset = scene.spriteset
+    return 32 unless spriteset
+    
+    sprite = spriteset.find_character_sprite(character)
+    (sprite && sprite.src_rect) ? sprite.src_rect.height : 32
+  end
+  
+  #--------------------------------------------------------------------------
   # * Calculate Bubble Position                                      [Custom]
   #--------------------------------------------------------------------------
   def calc_bubble_position(character)
@@ -1253,7 +1276,8 @@ class Window_Message < Window_Base
       @intended_window_x = character.screen_x - self.width / 2
     end
     
-    @intended_window_y = character.screen_y - self.height + 
+    sprite_top_y = character.screen_y - sprite_height_for_character(character)
+    @intended_window_y = sprite_top_y - self.height - 
                          @bubble_config[:y_offset_above]
   end
   
@@ -1792,7 +1816,8 @@ class Window_Message < Window_Base
   def process_escape_character(code, text, pos)
     case code.upcase
     when 'W'
-      wait_message(obtain_escape_param(text)) unless @show_fast
+      wait = obtain_escape_param(text)
+      wait_message(wait) unless @show_fast
     when '.'
       wait_message(15) unless @show_fast
     when '|'
@@ -1810,6 +1835,25 @@ class Window_Message < Window_Base
   
 end # Window_Message
 
+unless $imported[:hammy_ff9_choice_window]
+  #============================================================================
+  # ** Spriteset_Map
+  #----------------------------------------------------------------------------
+  #  This class brings together map screen sprites, tilemaps, etc. It's used
+  # within the Scene_Map class.
+  #============================================================================
+  
+  class Spriteset_Map
+    #------------------------------------------------------------------------
+    # * Find Sprite for Character                                    [Custom]
+    #------------------------------------------------------------------------
+    def find_character_sprite(game_character)
+      @character_sprites.find { |s| s.character == game_character }
+    end
+    
+  end # Spriteset_Map
+end # unless $imported[:hammy_ff9_choice_window]
+
 #==============================================================================
 # ** Scene_Map
 #------------------------------------------------------------------------------
@@ -1818,6 +1862,11 @@ end # Window_Message
 
 class Scene_Map < Scene_Base
   unless $imported[:hammy_ff9_choice_window]
+    #------------------------------------------------------------------------
+    # * Public Instance Variables                                    [Custom]
+    #------------------------------------------------------------------------
+    attr_reader :spriteset
+    
     #------------------------------------------------------------------------
     # * Alias Method Definitions                                     [Custom]
     #------------------------------------------------------------------------
