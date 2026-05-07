@@ -43,7 +43,7 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 # ► Customization System
 # -----------------------------------------------------------------------------
 # ★ Configurable screen resolution with Yanfly Core Engine compatibility
-# ★ Configurable logging enable/disable with $TEST as default
+# ★ Configurable logging enable/disable with $DEBUG as default
 # ★ Configurable F12 reset transition effect and duration
 # ★ Configurable profiler trigger key, output folder, and noise threshold
 # 
@@ -172,14 +172,14 @@ module Hammy
     # output location for all session log files.
     # 
     # LOGGING_ENABLED: Redirect stdout and stderr output to a log file
-    #   Defaults to $TEST, enabling logging automatically during playtesting
+    #   Defaults to $DEBUG, enabling logging automatically during playtesting
     # LOG_ON_CRASH: Write a crash log when LOGGING_ENABLED is false
     #   When false, no crash log is written and the path msgbox is suppressed
     # LOG_FILENAME_PREFIX: Base filename string prepended before the timestamp
     # LOG_FILENAME_EXTENSION: File extension for log files without the dot
     # LOG_FOLDER: Subfolder path for log files, or nil for the root directory
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    LOGGING_ENABLED = true
+    LOGGING_ENABLED = $DEBUG
     LOG_ON_CRASH = true
     LOG_FILENAME_PREFIX = "mkxp_z_"
     LOG_FILENAME_EXTENSION = "log"
