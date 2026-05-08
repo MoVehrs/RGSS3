@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - MKXP-Z Main Entry Point v1.00
+# ▼ Hammy - MKXP-Z Main Entry Point v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # -- Last Updated: 08.05.2026
 # -- Requires: mkxp-z (Ruby 3.1)
