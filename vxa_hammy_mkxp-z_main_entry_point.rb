@@ -3,7 +3,7 @@
 #==============================================================================
 # ▼ Hammy - MKXP-Z Main Entry Point v1.00
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 07.05.2026
+# -- Last Updated: 08.05.2026
 # -- Requires: mkxp-z (Ruby 3.1)
 # -- Recommended: None
 # -- Credits: 姫HimeWorks (Custom Main - Full Error Backtrace),
@@ -17,7 +17,11 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 29.04.2026 - Initial release. (v1.00)
+# 08.05.2026 - Added FORCE_TEST_MODE setting to explicitly set $TEST to true
+#              at startup, allowing mkxp-z to replicate Test Play behavior
+#              independently of the RPG Maker VX Ace editor launch method.
+#              (v1.01)
+# 07.05.2026 - Initial release. (v1.00)
 # 
 #==============================================================================
 # ▼ Introduction
@@ -43,7 +47,7 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 # ► Customization System
 # -----------------------------------------------------------------------------
 # ★ Configurable screen resolution with Yanfly Core Engine compatibility
-# ★ Configurable logging enable/disable with $DEBUG as default
+# ★ Configurable logging enable/disable as standalone setting
 # ★ Configurable F12 reset transition effect and duration
 # ★ Configurable profiler trigger key, output folder, and noise threshold
 # 
@@ -153,6 +157,18 @@ module Hammy
     SCREEN_HEIGHT = 416
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # - Test Mode Settings -
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure forced test mode for use with mkxp-z, where $TEST is not set
+    # automatically when launching via the RPG Maker VX Ace Test Play button.
+    # 
+    # FORCE_TEST_MODE: Force $TEST to true at startup regardless of launch mode
+    #   Enable this when running through mkxp-z to replicate Test Play behavior
+    #   Disable this before distributing or building a release version
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    FORCE_TEST_MODE = false
+    
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Reset Transition Settings -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the transition effect applied when F12 reset is triggered.
@@ -172,14 +188,14 @@ module Hammy
     # output location for all session log files.
     # 
     # LOGGING_ENABLED: Redirect stdout and stderr output to a log file
-    #   Defaults to $DEBUG, enabling logging automatically during playtesting
+    #   When true, session output is written to a dated log file on disk
     # LOG_ON_CRASH: Write a crash log when LOGGING_ENABLED is false
     #   When false, no crash log is written and the path msgbox is suppressed
     # LOG_FILENAME_PREFIX: Base filename string prepended before the timestamp
     # LOG_FILENAME_EXTENSION: File extension for log files without the dot
     # LOG_FOLDER: Subfolder path for log files, or nil for the root directory
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    LOGGING_ENABLED = $DEBUG
+    LOGGING_ENABLED = true
     LOG_ON_CRASH = true
     LOG_FILENAME_PREFIX = "mkxp_z_"
     LOG_FILENAME_EXTENSION = "log"
@@ -605,6 +621,11 @@ end # if Hammy::MainEntryPoint::PROFILER_ENABLED
 #------------------------------------------------------------------------------
 #  This processing is executed after module and class definition is finished.
 #==============================================================================
+
+#----------------------------------------------------------------------------
+# * Apply Forced Test Mode
+#----------------------------------------------------------------------------
+$TEST = true if Hammy::MainEntryPoint::FORCE_TEST_MODE
 
 #----------------------------------------------------------------------------
 # * Resize Screen
