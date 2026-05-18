@@ -156,7 +156,7 @@ module Hammy
     #   - RGSS symbol, tagged array, or VK integer
     #   - Default: :F8
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    SCREENSHOT_KEY    = :F8
+    SCREENSHOT_KEY = :F8
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Controller Button (mkxp-z only) -
@@ -192,8 +192,8 @@ module Hammy
     #   - "png", "jpg", or "bmp"
     #   - Default: "png"
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    FOLDER_NAME    = "Screenshots"
-    BASE_FILENAME  = "screenshot"
+    FOLDER_NAME = "Screenshots"
+    BASE_FILENAME = "screenshot"
     FILE_EXTENSION = "png"
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -220,7 +220,7 @@ module Hammy
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     EU_TIMESTAMP_FORMAT = "%d-%m-%Y_%H-%M-%S"
     US_TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
-    FILENAME_TEMPLATE   = "%{dir}/%{base}_%{time}%{counter}.%{ext}"
+    FILENAME_TEMPLATE = "%{dir}/%{base}_%{time}%{counter}.%{ext}"
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Date Format Fallback -
@@ -257,10 +257,10 @@ module Hammy
     #   - 50 to 150
     #   - Default: 100
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    PLAY_SOUND   = true
-    SOUND_NAME   = "Decision1"
+    PLAY_SOUND = true
+    SOUND_NAME = "Decision1"
     SOUND_VOLUME = 80
-    SOUND_PITCH  = 100
+    SOUND_PITCH = 100
     
     #========================================================================
     # ▼ End of Configuration
