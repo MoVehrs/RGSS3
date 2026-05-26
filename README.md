@@ -82,7 +82,7 @@ This project is licensed under the **MIT License**.
 You are free to use these scripts in any commercial or non-commercial RPG Maker VX Ace project. 
 
 **Credit Expectations:** 
-While the MIT license does not strictly mandate visible credits in your game, crediting **MoVehrs** in your game's credit roll or accompanying text file is highly appreciated.
+While the MIT license does not strictly mandate visible credits in your game, crediting **Hammy** in your game's credit roll or accompanying text file is highly appreciated.
 
 ## Contribution and Notes
 
