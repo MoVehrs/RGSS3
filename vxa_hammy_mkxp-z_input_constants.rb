@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - MKXP-Z Input Constants v1.00
+# ▼ Hammy - MKXP-Z Input Constants v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: mkxp-z (Ruby 3.1)
 # -- Recommended: None
 # -- Credits: None
@@ -15,7 +15,9 @@ $imported[:hammy_mkxp_z_input_constants] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -34,27 +36,26 @@ $imported[:hammy_mkxp_z_input_constants] = true
 # ► VK Code Features
 # -----------------------------------------------------------------------------
 # ★ Windows Virtual-Key integer constants for all common keys
-# ★ Mouse button codes as VK_LBUTTON, VK_RBUTTON, and VK_MBUTTON
+# ★ Virtual-Key codes for left, right, and middle mouse buttons
 # ★ Generic and side-specific variants for Shift, Control, and Alt
 # ★ Full numpad coverage including arithmetic operators
 # ★ Function keys F1 through F24
-# ★ OEM punctuation keys for US ANSI layout
+# ★ Layout-dependent punctuation keys for US ANSI layout
 # 
 # -----------------------------------------------------------------------------
 # ► SDL Code Features
 # -----------------------------------------------------------------------------
-# ★ SDL_KEY_ prefixed constants for letter keys A through Z
-# ★ SDL_NUM_ constants resolving the NUMBER_ prefix quirk for digit keys 0-9
-# ★ SDL_KP_ constants for all numpad keys including Enter and operators
+# ★ Scancode symbol aliases for letter keys A through Z
+# ★ Scancode symbol aliases resolving the digit key prefix quirk
+# ★ Scancode symbol aliases for all numpad keys including Enter and operators
 # ★ Left and right variants for Shift, Control, and Alt modifier keys
 # ★ Navigation, lock, function, punctuation, and system key coverage
 # 
 # -----------------------------------------------------------------------------
 # ► Controller Constant Features
 # -----------------------------------------------------------------------------
-# ★ SDL_BUTTON_ constants for all 15 SDL gamepad buttons (face, d-pad,
-#   shoulders, stick clicks, back, guide, start)
-# ★ SDL_AXIS_ constants for stick and trigger axes (reference symbols)
+# ★ Scancode symbol aliases for all 15 standard gamepad buttons
+# ★ Reference symbol constants for stick and trigger axes
 # 
 #==============================================================================
 # ▼ Base Classes & Method Modifications
@@ -168,8 +169,8 @@ $imported[:hammy_mkxp_z_input_constants] = true
 #==============================================================================
 # ▼ Compatibility
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script is made strictly for RPG Maker VX Ace running on mkxp-z.
-# It will not run on default RPG Maker VX Ace without mkxp-z.
+# This script is made strictly for RPG Maker VX Ace running on mkxp-z
+# (Ruby 3.1). It will not run on default RPG Maker VX Ace without mkxp-z.
 # 
 #==============================================================================
 
@@ -556,7 +557,7 @@ module Kernel
 end # Kernel
 
 #==============================================================================
-#
+# 
 # ▼ End of File
 #
 #==============================================================================

@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Vehicle Pseudo-3D × Interiors v1.00
+# ▼ Hammy - Vehicle Pseudo-3D × Interiors v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: Vehicle Pseudo-3D Database v3.0 by WoodPenguin,
 #              Vehicle Pseudo-3D Main Script v3.0.1 by WoodPenguin
 # -- Recommended: None
@@ -16,7 +16,9 @@ $imported[:hammy_vehicle_pseudo_3d_interiors] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -123,13 +125,13 @@ $imported[:hammy_vehicle_pseudo_3d_interiors] = true
 # ★ return_to_vehicle
 #   Returns the player to the vehicle from an interior map. Call this from a
 #   map event placed on the interior map such as a door or exit point.
-#   - No parameters
-#   - Returns: nil
+#   - Parameters: None
+#   - Returns: Nil
 # 
 # ★ can_return_to_vehicle?
 #   Returns true if the player is currently inside a vehicle interior and has
 #   a valid vehicle state to return to.
-#   - No parameters
+#   - Parameters: None
 #   - Returns: Boolean
 # 
 #==============================================================================
@@ -148,7 +150,9 @@ $imported[:hammy_vehicle_pseudo_3d_interiors] = true
 # return false, preventing a return to the vehicle scene.
 # 
 # ★ Interior maps must not be connected to the worldmap.
+# 
 # ★ Multiple interior maps are supported as long as the worldmap is unreachable.
+# 
 # ★ The return state persists for the entire duration of the interior visit.
 # 
 # -----------------------------------------------------------------------------
@@ -179,8 +183,8 @@ $imported[:hammy_vehicle_pseudo_3d_interiors] = true
 # ★ This script requires WoodPenguin - Vehicle Pseudo-3D Main Script and must
 #   be placed BELOW it.
 # 
-# ★ If using KilloZapit - Cache Back, place this script BELOW it.
-#   Cache Back must be placed ABOVE all Vehicle Pseudo-3D scripts.
+# ★ If using KilloZapit - Cache Back, place this script BELOW it. Cache Back
+#   must be placed ABOVE all Vehicle Pseudo-3D scripts.
 # 
 #==============================================================================
 # ▼ Compatibility
@@ -205,13 +209,19 @@ module Hammy
     # Configure the interior map destination for each vehicle type. When the
     # player enters a vehicle interior, they are transferred to this map.
     # 
-    # INTERIOR_MAP_IDS: Hash mapping vehicle symbols to interior map IDs
+    # INTERIOR_MAP_IDS: Hash mapping vehicle symbols to interior map IDs.
+    #   - Valid values: Hash of { symbol => integer }
+    #   - Default: { airship: 2 }
     # 
     # INTERIOR_X_COORDS: Hash mapping vehicle symbols to X coordinates where
-    #   the player appears on the interior map
+    #   the player appears on the interior map.
+    #   - Valid values: Hash of { symbol => integer }
+    #   - Default: { airship: 8 }
     # 
     # INTERIOR_Y_COORDS: Hash mapping vehicle symbols to Y coordinates where
-    #   the player appears on the interior map
+    #   the player appears on the interior map.
+    #   - Valid values: Hash of { symbol => integer }
+    #   - Default: { airship: 6 }
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     INTERIOR_MAP_IDS = {
       airship: 2
@@ -234,11 +244,9 @@ module Hammy
     # Configure the input button used to enter vehicle interiors. The player
     # must press this button while in a vehicle to enter its interior.
     # 
-    # INTERIOR_INPUTS: Hash mapping vehicle symbols to input button symbols
-    #   Directional: :DOWN :LEFT :RIGHT :UP
-    #   Action:      :A :B :C :X :Y :Z :L :R
-    #   Keyboard:    :SHIFT :CTRL :ALT
-    #   Function:    :F5 :F6 :F7 :F8 :F9
+    # INTERIOR_INPUTS: Hash mapping vehicle symbols to input button symbols.
+    #   - Valid values: Hash of { symbol => RGSS3 input symbol }
+    #   - Default: { airship: :X }
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     INTERIOR_INPUTS = {
       airship: :X
@@ -854,7 +862,7 @@ if defined?(Cache::DISPOSE_ON_NEWMAP) && Cache::DISPOSE_ON_NEWMAP
 end # Cache Back Guard
 
 #==============================================================================
-#
+# 
 # ▼ End of File
 #
 #==============================================================================

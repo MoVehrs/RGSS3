@@ -1,22 +1,30 @@
+# encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Window Headers v1.01
+# ▼ Hammy - Window Headers v1.02
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 27.11.2025
+# -- Last Updated: 25.05.2026
 # -- Requires: None
+# -- Optional: Hammy - FF9 Windowskin System v1.01+
 # -- Recommended: Text Cache v1.04 by Mithran
-# -- Credits: Yanfly (Documentation style)
+# -- Credits: None
 # -- License: MIT License
 #==============================================================================
 
-$imported = {} if $imported.nil?
+$imported ||= {}
 $imported[:hammy_window_headers] = true
 
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 27.11.2025 - Added compatibility for Hammy FF9 Windowskin System and fixed
-#              header sprite persistence during battle transition. (v1.01)
-# 24.10.2025 - Initial release. (v1.00)
+# 25.05.2026 - (v1.02) Applied new documentation conventions.
+#              Migrated configuration modules to Hammy::PascalCase naming.
+#              Added unless $@ guards to alias definitions.
+#              Standardized and shortened alias names.
+# 
+# 27.11.2025 - (v1.01) Added compatibility for Hammy FF9 Windowskin System and
+#              fixed header sprite persistence during battle transition.
+# 
+# 24.10.2025 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -38,14 +46,14 @@ $imported[:hammy_window_headers] = true
 # ★ Integration with Hammy FF9 Windowskin System for type-based offsets
 # 
 # -----------------------------------------------------------------------------
-# ► Customization System
+# ► Header Customization Features
 # -----------------------------------------------------------------------------
 # ★ Configurable text styling (font, size, color, outline, shadow)
 # ★ Configurable header positioning (horizontal and vertical offsets)
 # ★ Support for custom header graphics from Graphics/System/Headers folder
 # 
 # -----------------------------------------------------------------------------
-# ► Technical Features
+# ► Header Technical Features
 # -----------------------------------------------------------------------------
 # ★ Automatic header property updates (position, visibility, and z-index)
 # ★ Guard mechanism to prevent multiple header creation in inherited classes
@@ -70,10 +78,16 @@ $imported[:hammy_window_headers] = true
 #   - openness= → window_headers_win_base_openness=
 #   - viewport= → window_headers_win_base_viewport=
 # 
+# -----------------------------------------------------------------------------
+# ► Scene_Map (Class < Scene_Base)
+# -----------------------------------------------------------------------------
+# ★ Alias Methods:
+#   - pre_battle_scene → window_headers_sm_pre_btl_scn
+# 
 #==============================================================================
 # ▼ Recommended Scripts
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# The following scripts are highly recommended for optimal performance:
+# The following script is recommended for optimal performance:
 # 
 # -----------------------------------------------------------------------------
 # ► Text Cache v1.04 by Mithran
@@ -108,30 +122,30 @@ $imported[:hammy_window_headers] = true
 #  Configuration settings for the Window Headers system.
 #==============================================================================
 
-module CONFIG
-  module WINDOW_HEADERS
+module Hammy
+  module WindowHeaders
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Header Positioning Offsets -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the positioning offset for header sprites relative to their
-    # parent window. These values control where headers appear in relation to
-    # the window borders.
+    # parent window. These values control where headers appear in relation
+    # to the window borders.
     # 
-    # HEADER_OFFSETS: Hash containing offset settings for different window types
-    #   :default - Default offsets for standard windows
-    # 
+    # HEADER_OFFSETS: Hash containing offset settings for window types.
+    #   :default - Default offsets for standard windows.
     #   The following window types require the FF9 Windowskin System:
-    #   :frame   - Offsets for frame-type windows
-    #   :topbar  - Offsets for topbar-type windows
-    #   :help    - Offsets for help windows
-    #
+    #   :frame   - Offsets for frame-type windows.
+    #   :topbar  - Offsets for topbar-type windows.
+    #   :help    - Offsets for help windows.
     #   Each type contains:
-    #     :text_offset_x  - Horizontal offset for text headers
-    #     :text_offset_y  - Vertical offset for text headers
-    #     :image_offset_x - Horizontal offset for image headers
-    #     :image_offset_y - Vertical offset for image headers
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #     :text_offset_x  - Horizontal offset for text headers.
+    #     :text_offset_y  - Vertical offset for text headers.
+    #     :image_offset_x - Horizontal offset for image headers.
+    #     :image_offset_y - Vertical offset for image headers.
+    #   - Valid values: Hash with Symbol keys and Hash values
+    #   - Default: { :default => { ... }, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     HEADER_OFFSETS = {
       :default => {
         :text_offset_x => 10,
@@ -159,23 +173,25 @@ module CONFIG
       }
     }
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Text Header Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the appearance of text-based headers including font properties
-    # and color settings. Colors are stored as RGB arrays and converted to
-    # Color objects at runtime for better memory efficiency.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the appearance of text-based headers including font
+    # properties and color settings. Colors are stored as RGB arrays and
+    # converted to Color objects at runtime for better memory efficiency.
     # 
-    # TEXT_SETTINGS: Hash containing text header configuration
-    #   :font_name - Font family name for header text
-    #   :font_size - Font size in pixels for header text
-    #   :font_bold - Boolean flag for bold text styling
-    #   :font_italic - Boolean flag for italic text styling
-    #   :font_outline - Boolean flag for text outline effect
-    #   :font_shadow - Boolean flag for text shadow effect
-    #   :color - RGB array for main text color [R, G, B] (0-255)
-    #   :outline_color - RGB array for text outline color [R, G, B] (0-255)
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # TEXT_SETTINGS: Hash containing text header configuration.
+    #   :font_name - Font family name for header text.
+    #   :font_size - Font size in pixels for header text.
+    #   :font_bold - Boolean flag for bold text styling.
+    #   :font_italic - Boolean flag for italic text styling.
+    #   :font_outline - Boolean flag for text outline effect.
+    #   :font_shadow - Boolean flag for text shadow effect.
+    #   :color - RGB array for main text color [R, G, B] (0-255).
+    #   :outline_color - RGB array for text outline color [R, G, B] (0-255).
+    #   - Valid values: Hash with Symbol keys and specific value types
+    #   - Default: { :font_name => "Arial", :font_size => 13, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     TEXT_SETTINGS = {
       :font_name => "Arial",
       :font_size => 13,
@@ -187,24 +203,24 @@ module CONFIG
       :outline_color => [0, 0, 0]
     }
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Window Header Configuration -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure header settings for specific window classes. Each window class
-    # can be assigned either a text header or an image header with custom
-    # display content.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure header settings for specific window classes. Each window
+    # class can be assigned either a text header or an image header with
+    # custom display content.
     # 
-    # HEADERS: Hash mapping window classes to their header configuration
+    # HEADERS: Hash mapping window classes to their header configuration.
     #   Window class => {:type => :type, :string => "content"}
-    #   
     #   :type options:
-    #     :text - Display text-based header using TEXT_SETTINGS configuration
-    #     :image - Display image-based header from Graphics/System/Headers
-    #   
+    #     :text - Display text header using TEXT_SETTINGS configuration.
+    #     :image - Display image-based header from Graphics/System/Headers.
     #   :string content:
-    #     For :text type - The text string to display in the header
-    #     For :image type - Filename (without extension)
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #     For :text type - The text string to display in the header.
+    #     For :image type - Filename (without extension).
+    #   - Valid values: Hash with Window Class keys and Hash values
+    #   - Default: { Window_Gold => { ... }, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     HEADERS = {
       Window_Gold => {:type => :text, :string => "Gold"},
       Window_MenuCommand => {:type => :text, :string => "Main Menu"},
@@ -213,8 +229,8 @@ module CONFIG
       Window_ChoiceList => {:type => :image, :string => "ChoiceList"}
     }
     
-  end # CONFIG::WINDOW_HEADERS
-end # CONFIG
+  end # Hammy::WindowHeaders
+end # Hammy
 
 #==============================================================================
 # ▼ End of Documentation
@@ -255,15 +271,15 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :window_headers_win_base_initialize, :initialize
-  alias_method :window_headers_win_base_dispose, :dispose
-  alias_method :window_headers_win_base_update, :update
-  alias_method :window_headers_win_base_x=, :x=
-  alias_method :window_headers_win_base_y=, :y=
-  alias_method :window_headers_win_base_z=, :z=
-  alias_method :window_headers_win_base_visible=, :visible=
-  alias_method :window_headers_win_base_openness=, :openness=
-  alias_method :window_headers_win_base_viewport=, :viewport=
+  alias_method :window_headers_win_base_initialize, :initialize unless $@
+  alias_method :window_headers_win_base_dispose, :dispose unless $@
+  alias_method :window_headers_win_base_update, :update unless $@
+  alias_method :window_headers_win_base_x=, :x= unless $@
+  alias_method :window_headers_win_base_y=, :y= unless $@
+  alias_method :window_headers_win_base_z=, :z= unless $@
+  alias_method :window_headers_win_base_visible=, :visible= unless $@
+  alias_method :window_headers_win_base_openness=, :openness= unless $@
+  alias_method :window_headers_win_base_viewport=, :viewport= unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -308,11 +324,11 @@ class Window_Base < Window
   def get_header_offset(key)
     type = :default
     if $imported[:hammy_ff9_windowskin_system]
-      type = CONFIG::FF9_WINDOWSKIN.get_window_type(self.class)
+      type = Hammy::FF9WindowskinSystem.get_window_type(self.class)
     end
     
-    offsets = CONFIG::WINDOW_HEADERS::HEADER_OFFSETS[type]
-    offsets = CONFIG::WINDOW_HEADERS::HEADER_OFFSETS[:default] if offsets.nil?
+    offsets = Hammy::WindowHeaders::HEADER_OFFSETS[type]
+    offsets = Hammy::WindowHeaders::HEADER_OFFSETS[:default] if offsets.nil?
     
     offsets[key]
   end
@@ -431,7 +447,7 @@ class Window_Base < Window
   def create_header_sprite
     return if header_sprite_active? || @header_created
     
-    header_config = CONFIG::WINDOW_HEADERS::HEADERS[self.class]
+    header_config = Hammy::WindowHeaders::HEADERS[self.class]
     return unless header_config
     
     @header_sprite = Sprite.new(self.viewport)
@@ -453,7 +469,7 @@ class Window_Base < Window
   # * Create Text Header                                             [Custom]
   #--------------------------------------------------------------------------
   def create_text_header(text)
-    settings = CONFIG::WINDOW_HEADERS::TEXT_SETTINGS
+    settings = Hammy::WindowHeaders::TEXT_SETTINGS
     text_width = text_size(text).width
     bitmap_width = text_width + 2
     bitmap_height = settings[:font_size] + 2
@@ -509,13 +525,13 @@ class Scene_Map < Scene_Base
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :window_headers_scene_map_pre_battle_scene, :pre_battle_scene
+  alias_method :window_headers_sm_pre_btl_scn, :pre_battle_scene unless $@
   
   #--------------------------------------------------------------------------
   # * Preprocessing for Battle Screen Transition                      [Alias]
   #--------------------------------------------------------------------------
   def pre_battle_scene
-    window_headers_scene_map_pre_battle_scene
+    window_headers_sm_pre_btl_scn
     instance_variables.each do |var_name|
       instance_var = instance_variable_get(var_name)
       next unless instance_var.is_a?(Window)
@@ -547,5 +563,5 @@ end # Scene_Map
 #==============================================================================
 # 
 # ▼ End of File
-#
+# 
 #==============================================================================

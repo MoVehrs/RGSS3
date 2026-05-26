@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Simple Map Display × Performance Enhancements v1.00
+# ▼ Hammy - Simple Map Display × Performance Enhancements v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 17.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: Simple Map Display v2.4 by WoodPenguin
 # -- Optional: Vehicle Pseudo-3D Database v3.0 by WoodPenguin,
 #              Vehicle Pseudo-3D Main Script v3.0.1 by WoodPenguin
@@ -17,7 +17,9 @@ $imported[:hammy_simple_map_display_performance] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 17.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 17.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -55,8 +57,8 @@ $imported[:hammy_simple_map_display_performance] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
-# ★ This script requires WoodPenguin - Simple Map Display and must be
-#   placed BELOW it.
+# ★ This script requires WoodPenguin - Simple Map Display and must be placed
+#   BELOW it.
 # 
 # ★ If using WoodPenguin - Vehicle Pseudo-3D Database, place this script BELOW
 #   it.

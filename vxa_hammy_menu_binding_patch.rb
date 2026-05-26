@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Menu Binding Patch v1.00
+# ▼ Hammy - Menu Binding Patch v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: None
 # -- Recommended: None
 # -- Credits: None
@@ -15,7 +15,9 @@ $imported[:hammy_menu_binding_patch] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -30,7 +32,7 @@ $imported[:hammy_menu_binding_patch] = true
 # -----------------------------------------------------------------------------
 # ► Core Menu Binding Features
 # -----------------------------------------------------------------------------
-# ★ Configurable menu trigger button via module constant
+# ★ Configurable menu trigger button via module setting
 # ★ Clean override of Scene_Map menu trigger logic
 # ★ Seamless integration with existing game systems
 # 
@@ -74,11 +76,9 @@ module Hammy
     # Configure the input button used to trigger the main menu. The player
     # must press this button while on the map to open the menu.
     # 
-    # MENU_KEY: Keyboard key to trigger menu (RGSS symbol)
-    #   Directional: :DOWN :LEFT :RIGHT :UP
-    #   Action:      :A :B :C :X :Y :Z :L :R
-    #   Keyboard:    :SHIFT :CTRL :ALT
-    #   Function:    :F5 :F6 :F7 :F8 :F9
+    # MENU_KEY: Keyboard key used to trigger the menu.
+    #   - Valid values: Any RGSS3 input symbol (e.g. :X, :CTRL, :SHIFT)
+    #   - Default: :X
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     MENU_KEY = :X
     

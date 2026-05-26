@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Vehicle Pseudo-3D × Performance Enhancements v1.00
+# ▼ Hammy - Vehicle Pseudo-3D × Performance Enhancements v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: Vehicle Pseudo-3D Database v3.0 by WoodPenguin,
 #              Vehicle Pseudo-3D Main Script v3.0.1 by WoodPenguin
 # -- Optional: Vehicle Pseudo-3D OP1 v2.1 by WoodPenguin,
@@ -19,7 +19,9 @@ $imported[:hammy_vehicle_pseudo_3d_performance] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -38,9 +40,9 @@ $imported[:hammy_vehicle_pseudo_3d_performance] = true
 # ► Performance Enhancement Features
 # -----------------------------------------------------------------------------
 # ★ Angle radian result caching with change detection
-# ★ Event radian caching for OP4 Event 3D Display (optional)
-# ★ Trigonometric pre-computation for OP1 Compass (optional)
-# ★ Optimized map snapshot tiling loop for OP2 Field of View (optional)
+# ★ Event radian caching for WoodPenguin's Event 3D Display addon
+# ★ Trigonometric pre-computation for WoodPenguin's Compass addon
+# ★ Optimized map snapshot tiling loop for WoodPenguin's Field of View addon
 # 
 #==============================================================================
 # ▼ Base Classes & Method Modifications

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - MKXP-Z Main Entry Point v1.01
+# ▼ Hammy - MKXP-Z Main Entry Point v1.02
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 08.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: mkxp-z (Ruby 3.1)
 # -- Recommended: None
 # -- Credits: 姫HimeWorks (Custom Main - Full Error Backtrace),
@@ -17,11 +17,13 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 08.05.2026 - Added FORCE_TEST_MODE setting to explicitly set $TEST to true
-#              at startup, allowing mkxp-z to replicate Test Play behavior
+# 25.05.2026 - (v1.02) Applied new documentation conventions.
+# 
+# 08.05.2026 - (v1.01) Added FORCE_TEST_MODE setting to explicitly set $TEST to
+#              true at startup, allowing mkxp-z to replicate Test Play behavior
 #              independently of the RPG Maker VX Ace editor launch method.
-#              (v1.01)
-# 07.05.2026 - Initial release. (v1.00)
+# 
+# 07.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -44,7 +46,7 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 # ★ Timestamped console output via puts override
 # 
 # -----------------------------------------------------------------------------
-# ► Customization System
+# ► Entry Point Customization Features
 # -----------------------------------------------------------------------------
 # ★ Configurable screen resolution with Yanfly Core Engine compatibility
 # ★ Configurable logging enable/disable as standalone setting
@@ -52,7 +54,7 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 # ★ Configurable profiler trigger key, output folder, and noise threshold
 # 
 # -----------------------------------------------------------------------------
-# ► Technical Features
+# ► Entry Point Technical Features
 # -----------------------------------------------------------------------------
 # ★ Ruby 3.1 syntax with modern module instance variable conventions
 # ★ mkxp-z specific RGSSReset handling with optional snapshot transition
@@ -112,9 +114,15 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 # -----------------------------------------------------------------------------
 # ► Profiling Tips
 # -----------------------------------------------------------------------------
+# Follow these best practices to ensure accurate and actionable profiling
+# results when diagnosing performance issues.
+# 
 # ★ Profile for at least 30-60 seconds for statistically meaningful data
+# 
 # ★ Test specific scenarios separately (menus, battles, map movement)
+# 
 # ★ High % time indicates an optimization candidate
+# 
 # ★ High call count with low time indicates normal getters or setters
 # 
 #==============================================================================
@@ -130,8 +138,8 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 #==============================================================================
 # ▼ Compatibility
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script is made strictly for RPG Maker VX Ace running on mkxp-z.
-# It will not run on default RPG Maker VX Ace without mkxp-z.
+# This script is made strictly for RPG Maker VX Ace running on mkxp-z
+# (Ruby 3.1). It will not run on default RPG Maker VX Ace without mkxp-z.
 # 
 #==============================================================================
 
@@ -144,115 +152,173 @@ $imported[:hammy_mkxp_z_main_entry_point] = true
 module Hammy
   module MainEntryPoint
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Screen Resolution Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the game window dimensions in pixels. When Yanfly Ace Core
     # Engine is present, these settings are ignored.
     # 
-    # SCREEN_WIDTH: Width of the game window in pixels
-    # SCREEN_HEIGHT: Height of the game window in pixels
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # SCREEN_WIDTH: Width of the game window in pixels.
+    #   - Valid values: Any integer
+    #   - Default: 544
+    # 
+    # SCREEN_HEIGHT: Height of the game window in pixels.
+    #   - Valid values: Any integer
+    #   - Default: 416
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SCREEN_WIDTH = 544
     SCREEN_HEIGHT = 416
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Test Mode Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure forced test mode for use with mkxp-z, where $TEST is not set
     # automatically when launching via the RPG Maker VX Ace Test Play button.
     # 
-    # FORCE_TEST_MODE: Force $TEST to true at startup regardless of launch mode
-    #   Enable this when running through mkxp-z to replicate Test Play behavior
-    #   Disable this before distributing or building a release version
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # FORCE_TEST_MODE: Force $TEST to true at startup ignoring launch mode.
+    #   Enable this when using mkxp-z to replicate the Test Play behavior.
+    #   Disable this before distributing or building a release version.
+    #   - Valid values: true / false
+    #   - Default: false
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     FORCE_TEST_MODE = false
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Reset Transition Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the transition effect applied when F12 reset is triggered.
     # 
-    # RESET_USE_SNAPSHOT_TRANSITION: Show transition effect on F12 reset
-    #   When false, resets instantly without a transition effect
-    # RESET_TRANSITION_DURATION: Duration of the reset transition in frames
-    #   Only applies when RESET_USE_SNAPSHOT_TRANSITION is true
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # RESET_USE_SNAPSHOT_TRANSITION: Show transition effect on F12 reset.
+    #   When false, resets instantly without a transition effect.
+    #   - Valid values: true / false
+    #   - Default: false
+    # 
+    # RESET_TRANSITION_DURATION: Duration of the reset transition in frames.
+    #   Only applies when RESET_USE_SNAPSHOT_TRANSITION is true.
+    #   - Valid values: Any non-negative integer
+    #   - Default: 10
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     RESET_USE_SNAPSHOT_TRANSITION = false
     RESET_TRANSITION_DURATION = 10
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Log File Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure log file output including activation, filename format, and
     # output location for all session log files.
     # 
-    # LOGGING_ENABLED: Redirect stdout and stderr output to a log file
-    #   When true, session output is written to a dated log file on disk
-    # LOG_ON_CRASH: Write a crash log when LOGGING_ENABLED is false
-    #   When false, no crash log is written and the path msgbox is suppressed
-    # LOG_FILENAME_PREFIX: Base filename string prepended before the timestamp
-    # LOG_FILENAME_EXTENSION: File extension for log files without the dot
-    # LOG_FOLDER: Subfolder path for log files, or nil for the root directory
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # LOGGING_ENABLED: Redirect stdout and stderr output to a log file.
+    #   When true, session output is written to a dated log file on disk.
+    #   - Valid values: true / false
+    #   - Default: true
+    # 
+    # LOG_ON_CRASH: Write a crash log when LOGGING_ENABLED is false.
+    #   When false, no crash log is written and the msgbox is suppressed.
+    #   - Valid values: true / false
+    #   - Default: true
+    # 
+    # LOG_FILENAME_PREFIX: Filename string prepended before the timestamp.
+    #   - Valid values: String
+    #   - Default: "mkxp_z_"
+    # 
+    # LOG_FILENAME_EXTENSION: File extension for log files without the dot.
+    #   - Valid values: String
+    #   - Default: "log"
+    # 
+    # LOG_FOLDER: Subfolder path for log files, or nil for root directory.
+    #   - Valid values: String, or nil
+    #   - Default: "Logs"
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     LOGGING_ENABLED = true
     LOG_ON_CRASH = true
     LOG_FILENAME_PREFIX = "mkxp_z_"
     LOG_FILENAME_EXTENSION = "log"
     LOG_FOLDER = "Logs"
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Date Format Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the timestamp format used in all log and profiler filenames.
     # 
-    # DATE_FORMAT: Timestamp format string using Ruby strftime syntax
-    #   Shared across session log files and profiler report files
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # DATE_FORMAT: Timestamp format string using Ruby strftime syntax.
+    #   Shared across session log files and profiler report files.
+    #   - Valid values: String
+    #   - Default: "%d.%m.%Y_%H-%M-%S"
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     DATE_FORMAT = "%d.%m.%Y_%H-%M-%S"
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Output Buffering Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure whether log output is written immediately or held in a buffer.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure if the log output is written immediately or held in a buffer.
     # 
-    # SYNC_MODE: Flush log output to disk immediately on each write
-    #   When false, output is buffered for better write performance
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # SYNC_MODE: Flush log output to disk immediately on each write.
+    #   When false, output is buffered for better write performance.
+    #   - Valid values: true / false
+    #   - Default: false
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SYNC_MODE = false
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Timestamp Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure timestamp prefixes for console output via puts.
     # 
-    # TIMESTAMPS: Prepend a timestamp prefix to all puts output
-    # TIMESTAMP_FORMAT: Timestamp format string using Ruby strftime syntax
-    #   Only applies when TIMESTAMPS is true
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # TIMESTAMPS: Prepend a timestamp prefix to all puts output.
+    #   - Valid values: true / false
+    #   - Default: true
+    # 
+    # TIMESTAMP_FORMAT: Timestamp format string using Ruby strftime syntax.
+    #   Only applies when TIMESTAMPS is true.
+    #   - Valid values: String
+    #   - Default: "%H:%M:%S"
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     TIMESTAMPS = true
     TIMESTAMP_FORMAT = "%H:%M:%S"
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Profiler Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the TracePoint profiler including activation, trigger key,
     # output location, noise filtering, and class exclusions.
     # 
-    # PROFILER_ENABLED: Enable the TracePoint performance profiler
-    #   When false, the profiler is not initialized with zero runtime overhead
-    # PROFILER_TRIGGER_KEY: Input key that triggers profiler report output
-    # PROFILER_SHOW_MSGBOX: Show a confirmation msgbox after writing a report
-    #   When false, the report is written silently without pausing gameplay
-    # PROFILER_MIN_PERCENT: Minimum time percentage for inclusion in report
-    #   Methods below this threshold are excluded; set to 0.0 to include all
-    # PROFILER_FILENAME_PREFIX: Base filename string prepended before timestamp
-    # PROFILER_LOG_EXTENSION: File extension for profiler report files
-    # PROFILER_FOLDER: Subfolder path for profiler files, or nil for root
-    # PROFILER_EXCLUDED_CLASSES: Array of class name prefixes to exclude
-    #   Classes are matched by prefix using start_with? against the class name
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    PROFILER_ENABLED = false
+    # PROFILER_ENABLED: Enable the TracePoint performance profiler.
+    #   When false, the profiler is not initialized for zero overhead.
+    #   - Valid values: true / false
+    #   - Default: false
+    # 
+    # PROFILER_TRIGGER_KEY: Input key that triggers profiler report output.
+    #   - Valid values: RGSS symbol
+    #   - Default: :F9
+    # 
+    # PROFILER_SHOW_MSGBOX: Show a confirmation msgbox after saving a report.
+    #   When false, the report is written silently without pausing gameplay.
+    #   - Valid values: true / false
+    #   - Default: true
+    # 
+    # PROFILER_MIN_PERCENT: Minimum time percentage for inclusion in report.
+    #   Methods below this threshold are excluded; set to 0.0 to include all.
+    #   - Valid values: Float
+    #   - Default: 0.1
+    # 
+    # PROFILER_FILENAME_PREFIX: Filename string prepended before timestamp.
+    #   - Valid values: String
+    #   - Default: "profiler_"
+    # 
+    # PROFILER_LOG_EXTENSION: File extension for profiler report files.
+    #   - Valid values: String
+    #   - Default: "log"
+    # 
+    # PROFILER_FOLDER: Subfolder path for profiler files, or nil for root.
+    #   - Valid values: String, or nil
+    #   - Default: "Logs/Profiler"
+    # 
+    # PROFILER_EXCLUDED_CLASSES: Array of class name prefixes to exclude.
+    #   Classes are matched by prefix using start_with? against their name.
+    #   - Valid values: Array of Strings
+    #   - Default: (See array below)
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    PROFILER_ENABLED = true
     PROFILER_TRIGGER_KEY = :F9
     PROFILER_SHOW_MSGBOX = true
     PROFILER_MIN_PERCENT = 0.1

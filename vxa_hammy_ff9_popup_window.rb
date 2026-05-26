@@ -1,21 +1,30 @@
+# encoding: utf-8
 #==============================================================================
-# ▼ Hammy - FF9 Popup Window v1.01
+# ▼ Hammy - FF9 Popup Window v1.02
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 31.10.2025
+# -- Last Updated: 25.05.2026
 # -- Requires: None
+# -- Optional: Hammy - FF9 Windowskin System v1.01+,
+#              Hammy - Window Shadows v1.04+
 # -- Recommended: Text Cache v1.04 by Mithran
-# -- Credits: Vlue (Popup Window), Yanfly (Documentation style)
+# -- Credits: Vlue (Popup Window)
 # -- License: MIT License
 #==============================================================================
 
-$imported = {} if $imported.nil?
+$imported ||= {}
 $imported[:hammy_ff9_popup] = true
 
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 31.10.2025 - Added configurable compact spacing for empty lines. (v1.01)
-# 26.10.2025 - Initial release. (v1.00)
+# 25.05.2026 - (v1.02) Applied new documentation conventions.
+#              Migrated configuration modules to Hammy::PascalCase naming.
+#              Added unless $@ guards to alias definitions.
+#              Standardized and shortened alias names.
+# 
+# 31.10.2025 - (v1.01) Added configurable compact spacing for empty lines.
+# 
+# 26.10.2025 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -38,14 +47,14 @@ $imported[:hammy_ff9_popup] = true
 # ★ Window type override support via Hammy FF9 Windowskin System integration
 # 
 # -----------------------------------------------------------------------------
-# ► Helper Methods
+# ► Popup Helper Features
 # -----------------------------------------------------------------------------
 # ★ Default popup display with custom text arrays
 # ★ Item reward popups with automatic inventory management
 # ★ Gold reward popups with automatic currency addition
 # 
 # -----------------------------------------------------------------------------
-# ► Technical Features
+# ► Popup Technical Features
 # -----------------------------------------------------------------------------
 # ★ Player movement blocking during popup display
 # ★ Dynamic window sizing based on text content
@@ -71,35 +80,15 @@ $imported[:hammy_ff9_popup] = true
 # ► Game_Interpreter (Class)
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
-#   - command_355 → ff9_popup_game_interpreter_command_355
+#   - command_355 → ff9_popup_gi_command_355
 # 
 # -----------------------------------------------------------------------------
 # ► Scene_Map (Class < Scene_Base)
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
-#   - create_all_windows → ff9_popup_scene_base_create_all_windows
-#   - update → ff9_popup_scene_base_update
-#   - update_call_menu → ff9_popup_scene_base_update_call_menu
-# 
-#==============================================================================
-# ▼ General Setup & Usage Guide
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This section explains proper text formatting and escape code usage for
-# optimal popup display results.
-# 
-# -----------------------------------------------------------------------------
-# ► Text Formatting Guidelines
-# -----------------------------------------------------------------------------
-# When using escape codes in popup text, proper string formatting is essential
-# for correct display of special characters, colors, and icons.
-# 
-# ★ Recommended: Use single quotes ('') for escape codes
-#   Single quotes preserve backslashes without requiring double escaping
-#   Example: default_popup(['\i[5] \c[14]Item received!\c[0]'])
-# 
-# ★ Alternative: Use double quotes ("") with double backslashes
-#   Double quotes require escape characters to be doubled for proper parsing
-#   Example: default_popup(["\\i[5] \\c[14]Item received!\\c[0]"])
+#   - create_all_windows → ff9_popup_sm_crt_all_wins
+#   - update → ff9_popup_sm_update
+#   - update_call_menu → ff9_popup_sm_update_call_menu
 # 
 #==============================================================================
 # ▼ Script Calls
@@ -111,20 +100,22 @@ $imported[:hammy_ff9_popup] = true
 # -----------------------------------------------------------------------------
 # ★ default_popup(['text line 1', 'text line 2'], x, y, type)
 #   Displays a popup window with custom text content.
-#   - text: Array of strings or hashes for each line of popup text
-#           String format: "Text content" (left-aligned by default)
-#           Hash format: {text: "Text content", align: :center/:left/:right}
-#   - x: Optional horizontal position (nil for center)
-#   - y: Optional vertical position (nil for center)
-#   - type: Optional windowskin type (:default, :frame, :topbar, :help)
-#   - Returns: nil
+#   - Parameters:
+#     - text: Array of strings or hashes for each line of popup text
+#             String format: "Text content" (left-aligned by default)
+#             Hash format: {text: "Text content", align: :center/:left/:right}
+#     - x: Optional horizontal position (nil for center)
+#     - y: Optional vertical position (nil for center)
+#     - type: Optional windowskin type (:default, :frame, :topbar, :help)
+#   - Returns: Nil
 # 
 # ★ Examples:
 #   - Basic popup with single line and icon
 #     default_popup(['\i[5] Mage class unlocked!'])
 # 
 #   - Two lines with custom position x=50, y=50
-#     default_popup(['\c[16]Class Change:\c[0]', 'Speak to any hermit!'], 50, 50)
+#     default_popup(['\c[16]Class Change:\c[0]',
+#                    'Speak to any hermit!'], 50, 50)
 # 
 #   - Mixed alignment: centered title with left-aligned text
 #     default_popup([{text: 'Centered Title', align: :center}, 'Left text'])
@@ -140,11 +131,12 @@ $imported[:hammy_ff9_popup] = true
 # -----------------------------------------------------------------------------
 # ★ gold_popup(amount, x, y, type)
 #   Displays gold reward popup and adds gold to party.
-#   - amount: Amount of gold to add to party funds
-#   - x: Optional horizontal position (nil for center)
-#   - y: Optional vertical position (nil for center)
-#   - type: Optional windowskin type (:default, :frame, :topbar, :help)
-#   - Returns: nil
+#   - Parameters:
+#     - amount: Amount of gold to add to party funds
+#     - x: Optional horizontal position (nil for center)
+#     - y: Optional vertical position (nil for center)
+#     - type: Optional windowskin type (:default, :frame, :topbar, :help)
+#   - Returns: Nil
 # 
 # ★ Examples:
 #   - Add 100 gold
@@ -158,12 +150,13 @@ $imported[:hammy_ff9_popup] = true
 # -----------------------------------------------------------------------------
 # ★ item_popup(item_id, quantity, x, y, type)
 #   Displays item reward popup and adds items to inventory.
-#   - item_id: Database ID of the item to reward
-#   - quantity: Number of items to add (default: 1)
-#   - x: Optional horizontal position (nil for center)
-#   - y: Optional vertical position (nil for center)
-#   - type: Optional windowskin type (:default, :frame, :topbar, :help)
-#   - Returns: nil
+#   - Parameters:
+#     - item_id: Database ID of the item to reward
+#     - quantity: Number of items to add (default: 1)
+#     - x: Optional horizontal position (nil for center)
+#     - y: Optional vertical position (nil for center)
+#     - type: Optional windowskin type (:default, :frame, :topbar, :help)
+#   - Returns: Nil
 # 
 # ★ Examples:
 #   - Add 1 of item ID 1
@@ -173,9 +166,29 @@ $imported[:hammy_ff9_popup] = true
 #     item_popup(5, 3, 50, 50)
 # 
 #==============================================================================
+# ▼ General Setup & Usage Guide
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# This section explains proper text formatting and escape code usage for
+# optimal popup display results.
+# 
+# -----------------------------------------------------------------------------
+# ► Text Formatting Guidelines
+# -----------------------------------------------------------------------------
+# When using escape codes in popup text, proper string formatting is essential
+# for correct display of special characters, colors, and icons.
+# 
+# ★ Recommended: Use single quotes ('') for escape codes
+#   - Single quotes preserve backslashes without requiring double escaping
+#   - Example: default_popup(['\i[5] \c[14]Item received!\c[0]'])
+# 
+# ★ Alternative: Use double quotes ("") with double backslashes
+#   - Double quotes require escape characters to be doubled for proper parsing
+#   - Example: default_popup(["\\i[5] \\c[14]Item received!\\c[0]"])
+# 
+#==============================================================================
 # ▼ Recommended Scripts
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# The following scripts are highly recommended for optimal performance:
+# The following script is recommended for optimal performance:
 # 
 # -----------------------------------------------------------------------------
 # ► Text Cache v1.04 by Mithran
@@ -195,12 +208,10 @@ $imported[:hammy_ff9_popup] = true
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
-#
-# ★ If using Hammy FF9 Windowskin System, place this script ABOVE the
-#   Windowskin System script.
-#
-# ★ If using Hammy Window Shadows, place this script ABOVE the Window Shadows
-#   script.
+# 
+# ★ If using Hammy - FF9 Windowskin System, place this script ABOVE it.
+# 
+# ★ If using Hammy - Window Shadows, place this script ABOVE it.
 # 
 #==============================================================================
 # ▼ Compatibility
@@ -216,27 +227,44 @@ $imported[:hammy_ff9_popup] = true
 #  Configuration settings for the FF9 Popup Window system.
 #==============================================================================
 
-module CONFIG
-  module FF9_POPUP
+module Hammy
+  module FF9PopupWindow
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # - Window Appearance Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the visual appearance and spacing of popup windows including
-    # padding and border settings that control the window's internal layout.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # - Popup Window Display Settings -
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the visual appearance and behavior of popup windows including
+    # text line spacing, padding, colors, and string representations.
     # 
-    # LINE_HEIGHT: Height of each text line in pixels for popup windows
-    #   Uses default font size by default, but can be set to any integer value
-    # STANDARD_PADDING: Window padding size in pixels for popup windows
-    #   Controls the internal spacing between window borders and content
-    # HIGHLIGHT_COLOR: Text color ID for highlighted text in popup messages
-    #   Uses RPG Maker VX Ace's standard color palette (0-31)
-    # CURRENCY_NAME: Name of the currency displayed in gold reward popups
-    #   Can be customized to match your game's currency system
-    # COMPACT_SPACING: Enable compact spacing for empty text lines
-    #   When true, empty text lines use reduced height spacing for separation
-    # COMPACT_LINE_HEIGHT: Height for empty lines when compact spacing enabled
-    #   Pixel height used for empty text lines when COMPACT_SPACING is true
+    # LINE_HEIGHT: Height of each text line in pixels for popup windows.
+    #   Uses default font size by default, can be set to any integer value.
+    #   - Valid values: Any integer value
+    #   - Default: Font.default_size
+    # 
+    # STANDARD_PADDING: Window padding size in pixels for popup windows.
+    #   Controls the internal spacing between window borders and content.
+    #   - Valid values: Any integer value
+    #   - Default: 12
+    # 
+    # HIGHLIGHT_COLOR: Text color ID for highlighted text in popup messages.
+    #   Uses RPG Maker VX Ace's standard color palette (0-31).
+    #   - Valid values: Integer from 0 to 31
+    #   - Default: 14
+    # 
+    # CURRENCY_NAME: Name of the currency displayed in gold reward popups.
+    #   Can be customized to match your game's currency system.
+    #   - Valid values: String containing currency name
+    #   - Default: "Gil"
+    # 
+    # COMPACT_SPACING: Enable compact spacing for empty text lines.
+    #   When true, empty text lines use reduced height for separation.
+    #   - Valid values: true or false
+    #   - Default: true
+    # 
+    # COMPACT_LINE_HEIGHT: Empty line height when compact spacing is enabled.
+    #   Pixel height used for empty text lines when COMPACT_SPACING is true.
+    #   - Valid values: Any integer value
+    #   - Default: 6
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     LINE_HEIGHT = Font.default_size
     STANDARD_PADDING = 12
@@ -245,24 +273,26 @@ module CONFIG
     COMPACT_SPACING = true
     COMPACT_LINE_HEIGHT = 6
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Sound Effect Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the sound effect played when popup windows are closed by user
-    # input. The sound file should be placed in the Audio/SE folder of your
-    # project.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the sound effect played when popup windows are closed by
+    # user input. The sound file should be placed in the Audio/SE folder
+    # of your project.
     # 
-    # CLOSE_SOUND: Sound effect configuration for popup window closing
-    #   nil - No sound effect will be played
-    #   "filename" - Play filename.ogg at volume 80, pitch 100 (default values)
-    #   ["filename", volume, pitch] - Play with custom volume and pitch values
+    # CLOSE_SOUND: Sound effect configuration for popup window closing.
+    #   nil - No sound effect will be played.
+    #   "filename" - Play filename.ogg at volume 80, pitch 100 (defaults).
+    #   ["filename", volume, pitch] - Play with custom volume and pitch.
     #     volume: 0-100 (sound volume level)
     #     pitch: 50-150 (sound pitch adjustment, 100 = normal)
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #   - Valid values: nil, String, or Array
+    #   - Default: "Decision1"
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     CLOSE_SOUND = "Decision1"
     
-  end # CONFIG::FF9_POPUP
-end # CONFIG
+  end # Hammy::FF9PopupWindow
+end # Hammy
 
 #==============================================================================
 # ▼ End of Documentation
@@ -292,8 +322,8 @@ class Game_Player < Game_Character
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_popup_game_sys_initialize, :initialize
-  alias_method :ff9_popup_game_sys_update, :update
+  alias_method :ff9_popup_game_sys_initialize, :initialize unless $@
+  alias_method :ff9_popup_game_sys_update, :update unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -324,13 +354,13 @@ class Game_Interpreter
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_popup_game_interpreter_command_355, :command_355
+  alias_method :ff9_popup_gi_command_355, :command_355 unless $@
   
   #--------------------------------------------------------------------------
   # * Script Command Processing                                       [Alias]
   #--------------------------------------------------------------------------
   def command_355
-    ff9_popup_game_interpreter_command_355
+    ff9_popup_gi_command_355
     wait_for_ff9_popup if SceneManager.scene.is_a?(Scene_Map)
   end
   
@@ -357,8 +387,8 @@ class Game_Interpreter
     return unless SceneManager.scene.is_a?(Scene_Map)
     
     $game_party.gain_gold(amount)
-    color = CONFIG::FF9_POPUP::HIGHLIGHT_COLOR
-    currency = CONFIG::FF9_POPUP::CURRENCY_NAME
+    color = Hammy::FF9PopupWindow::HIGHLIGHT_COLOR
+    currency = Hammy::FF9PopupWindow::CURRENCY_NAME
     text = ["", "Received \\c[#{color}]#{amount} #{currency}\\c[0]!", ""]
     
     SceneManager.scene.show_ff9_popup(text, x, y, type)
@@ -373,7 +403,7 @@ class Game_Interpreter
     
     $game_party.gain_item($data_items[item_id], quantity)
     item_name = $data_items[item_id].name
-    color = CONFIG::FF9_POPUP::HIGHLIGHT_COLOR
+    color = Hammy::FF9PopupWindow::HIGHLIGHT_COLOR
     
     if quantity > 1
       text = ["", "Received \\c[#{color}]#{quantity}x #{item_name}\\c[0]!", ""]
@@ -405,22 +435,22 @@ class Window_FF9Popup < Window_Base
     @offset_x = nil
     @offset_y = nil
     @windowskin_name = nil
-    @compact_spacing = CONFIG::FF9_POPUP::COMPACT_SPACING
-    @compact_line_height = CONFIG::FF9_POPUP::COMPACT_LINE_HEIGHT
+    @compact_spacing = Hammy::FF9PopupWindow::COMPACT_SPACING
+    @compact_line_height = Hammy::FF9PopupWindow::COMPACT_LINE_HEIGHT
   end
   
   #--------------------------------------------------------------------------
   # * Get Line Height                                             [Overwrite]
   #--------------------------------------------------------------------------
   def line_height
-    CONFIG::FF9_POPUP::LINE_HEIGHT
+    Hammy::FF9PopupWindow::LINE_HEIGHT
   end
   
   #--------------------------------------------------------------------------
   # * Get Standard Padding Size                                   [Overwrite]
   #--------------------------------------------------------------------------
   def standard_padding
-    CONFIG::FF9_POPUP::STANDARD_PADDING
+    Hammy::FF9PopupWindow::STANDARD_PADDING
   end
   
   #--------------------------------------------------------------------------
@@ -589,14 +619,14 @@ class Window_FF9Popup < Window_Base
     return unless $imported[:hammy_ff9_windowskin_system]
     
     if type.nil?
-      type = CONFIG::FF9_WINDOWSKIN.get_window_type(self.class)
+      type = Hammy::FF9WindowskinSystem.get_window_type(self.class)
     else
       valid_types = [:default, :frame, :topbar, :help]
       return unless valid_types.include?(type)
     end
     
     color = $game_system.windowskin_color
-    skin_name = CONFIG::FF9_WINDOWSKIN.get_windowskin(type, color)
+    skin_name = Hammy::FF9WindowskinSystem.get_windowskin(type, color)
     return if @windowskin_name == skin_name
     
     self.windowskin = Cache.system(skin_name)
@@ -619,15 +649,15 @@ class Scene_Map < Scene_Base
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_popup_scene_base_create_all_windows, :create_all_windows
-  alias_method :ff9_popup_scene_base_update, :update
-  alias_method :ff9_popup_scene_base_update_call_menu, :update_call_menu
+  alias_method :ff9_popup_sm_crt_all_wins, :create_all_windows unless $@
+  alias_method :ff9_popup_sm_update, :update unless $@
+  alias_method :ff9_popup_sm_update_call_menu, :update_call_menu unless $@
   
   #--------------------------------------------------------------------------
   # * Create All Windows                                              [Alias]
   #--------------------------------------------------------------------------
   def create_all_windows
-    ff9_popup_scene_base_create_all_windows
+    ff9_popup_sm_crt_all_wins
     create_ff9_popup_window
   end
   
@@ -635,7 +665,7 @@ class Scene_Map < Scene_Base
   # * Frame Update                                                    [Alias]
   #--------------------------------------------------------------------------
   def update
-    ff9_popup_scene_base_update
+    ff9_popup_sm_update
     update_ff9_popup_window
   end
   
@@ -644,7 +674,7 @@ class Scene_Map < Scene_Base
   #--------------------------------------------------------------------------
   def update_call_menu
     return if $game_player.ff9_popup_active
-    ff9_popup_scene_base_update_call_menu
+    ff9_popup_sm_update_call_menu
   end
   
   #--------------------------------------------------------------------------
@@ -693,7 +723,7 @@ class Scene_Map < Scene_Base
   # * Play FF9 Popup Close Sound                                     [Custom]
   #--------------------------------------------------------------------------
   def play_ff9_popup_close_sound
-    sound_config = CONFIG::FF9_POPUP::CLOSE_SOUND
+    sound_config = Hammy::FF9PopupWindow::CLOSE_SOUND
     return unless sound_config
     
     case sound_config

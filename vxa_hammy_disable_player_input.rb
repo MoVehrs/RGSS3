@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Disable Player Input v1.00
+# ▼ Hammy - Disable Player Input v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: None
 # -- Recommended: None
 # -- Credits: None
@@ -15,7 +15,9 @@ $imported[:hammy_disable_player_input] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -31,7 +33,7 @@ $imported[:hammy_disable_player_input] = true
 # ► Core Movement Input Features
 # -----------------------------------------------------------------------------
 # ★ Complete player movement input blocking
-# ★ Configurable switch ID via module constant
+# ★ Switch-based input blocking via configurable setting
 # ★ Alias method pattern for safe compatibility
 # 
 #==============================================================================
@@ -153,9 +155,9 @@ $imported[:hammy_disable_player_input] = true
 #==============================================================================
 
 #==============================================================================
-# ** Disable Movement Input Configuration
+# ** Disable Player Input Configuration
 #------------------------------------------------------------------------------
-#  Configuration settings for the movement input disable system.
+#  Configuration settings for the Disable Player Input system.
 #==============================================================================
 
 module Hammy
@@ -166,16 +168,16 @@ module Hammy
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the game switches used to control player input blocking.
     # 
-    # MOVEMENT_SWITCH_ID: Controls player movement input blocking
+    # MOVEMENT_SWITCH_ID: Controls player movement input blocking.
     #   When this switch is ON, player movement input is disabled.
     #   When OFF, movement input works normally.
-    #   - Any valid switch ID (1 to maximum switches in your project)
+    #   - Valid values: Any valid switch ID (1 to max switches in project)
     #   - Default: 10
     # 
-    # ACTION_SWITCH_ID: Controls event interaction with :C input blocking
+    # ACTION_SWITCH_ID: Controls event interaction with :C input blocking.
     #   When this switch is ON, event interaction with :C input is disabled.
     #   When OFF, event interaction works normally.
-    #   - Any valid switch ID (1 to maximum switches in your project)
+    #   - Valid values: Any valid switch ID (1 to max switches in project)
     #   - Default: 11
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     MOVEMENT_SWITCH_ID = 10
@@ -229,7 +231,7 @@ class Game_Player < Game_Character
 end # Game_Player
 
 #==============================================================================
-#
+# 
 # ▼ End of File
 #
 #==============================================================================

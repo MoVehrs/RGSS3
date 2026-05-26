@@ -1,9 +1,9 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Vehicle Pseudo-3D × Input Device Tracker v1.00
+# ▼ Hammy - Vehicle Pseudo-3D × Input Device Tracker v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
-# -- Requires: Hammy - MKXP-Z Input Device Tracker v1.00 or higher,
+# -- Last Updated: 25.05.2026
+# -- Requires: Hammy - MKXP-Z Input Device Tracker v1.01+,
 #              Vehicle Pseudo-3D Database v3.0 by WoodPenguin,
 #              Vehicle Pseudo-3D Main Script v3.0.1 by WoodPenguin
 # -- Recommended: None
@@ -17,7 +17,9 @@ $imported[:hammy_vehicle_pseudo_3d_idt] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -26,7 +28,7 @@ $imported[:hammy_vehicle_pseudo_3d_idt] = true
 # using WoodPenguin's Vehicle Pseudo-3D system. It restores the per-frame
 # device poll that Scene_Vehicle's update_basic override would otherwise skip.
 # 
-# The system supports tracker polling at the correct position after Input.update
+# The system supports tracker polling at the proper position after Input.update
 # within the vehicle update cycle, load-time activation guarded by both
 # required script checks, and full compatibility with the vehicle scene across
 # driving, landing, and interior entry transitions.
@@ -114,7 +116,7 @@ if $imported[:hammy_mkxp_z_input_device_tracker] && defined?(WdTk::Veh3D)
 end # $imported Guard
 
 #==============================================================================
-#
+# 
 # ▼ End of File
 #
 #==============================================================================

@@ -1,22 +1,29 @@
+# encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Window Shadows - YEA System Options Addon v1.00
+# ▼ Hammy - Window Shadows - YEA System Options Addon v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 23.10.2025
-# -- Requires: Hammy Window Shadows v1.00 or higher,
+# -- Last Updated: 25.05.2026
+# -- Requires: Hammy Window Shadows v1.01+,
 #              YEA-SystemOptions v1.00
 # -- Optional: Theolized - Global System Option v1.00
-# -- Credits: Yanfly (YEA-SystemOptions, Documentation style),
+# -- Recommended: None
+# -- Credits: Yanfly (YEA-SystemOptions),
 #             Theo Allen (Global System Option)
 # -- License: MIT License
 #==============================================================================
 
-$imported = {} if $imported.nil?
+$imported ||= {}
 $imported[:hammy_window_shadows_system_options] = true
 
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 23.10.2025 - Initial release.
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+#              Migrated configuration modules to Hammy::PascalCase naming.
+#              Added unless $@ guards to alias definitions.
+#              Standardized and shortened alias names.
+# 
+# 23.10.2025 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -36,11 +43,21 @@ $imported[:hammy_window_shadows_system_options] = true
 # ★ Window shadows toggle command in System Options menu
 # ★ Automatic detection of Global System Option script presence
 # ★ Configurable command insertion position via anchor system
-#
+# 
 #==============================================================================
 # ▼ Base Classes & Method Modifications
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script modifies the following RGSS3 3rd party classes:
+# This script modifies the following RGSS3 base classes:
+# 
+# -----------------------------------------------------------------------------
+# ► Game_System (Class)
+# -----------------------------------------------------------------------------
+# ★ Added Getters/Setters:
+#   - window_shadows
+#   - window_shadows=
+# 
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# This script modifies the following 3rd party classes:
 # 
 # -----------------------------------------------------------------------------
 # ► OptionData (Class)
@@ -56,8 +73,8 @@ $imported[:hammy_window_shadows_system_options] = true
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
 #   - draw_item → window_shadows_win_sysopt_draw_item
-#   - cursor_change → window_shadows_win_sysopt_cursor_change
-#   - make_command_list → window_shadows_win_sysopt_make_comm_list
+#   - cursor_change → window_shadows_win_sysopt_crsr_chng
+#   - make_command_list → window_shadows_win_sysopt_mk_cmd
 # 
 #==============================================================================
 # ▼ Instructions
@@ -65,7 +82,8 @@ $imported[:hammy_window_shadows_system_options] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
-# ★ Place this script BELOW YEA-SystemOptions and Hammy Window Shadows.
+# ★ This script requires Yanfly - YEA-SystemOptions and Hammy - Window Shadows
+#   and must be placed BELOW them.
 # 
 # ★ If using Theolized Global System Option v1.0, window shadow preferences
 #   will be saved globally across all save files.
@@ -84,29 +102,33 @@ $imported[:hammy_window_shadows_system_options] = true
 #  Configuration settings for the Window Shadows system.
 #==============================================================================
 
-module CONFIG
-  module WINDOW_SHADOWS
+module Hammy
+  module WindowShadows
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - System Options Anchor -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the insertion position for the window shadows command in the
     # System Options menu. The command will be inserted after the specified
     # anchor command.
     # 
-    # WINDOW_SHADOWS_INSERT_ANCHOR: Symbol of the anchor command
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # WINDOW_SHADOWS_INSERT_ANCHOR: Symbol of the anchor command.
+    #   - Valid values: Symbol representing a command in System Options
+    #   - Default: :window_blu
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     WINDOW_SHADOWS_INSERT_ANCHOR = :window_blu
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Command Vocabulary -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the display text and help information for the window shadows
     # toggle command in the System Options menu.
     # 
-    # WINDOW_SHADOWS_VOCAB: Hash containing command text and help description
+    # WINDOW_SHADOWS_VOCAB: Hash containing command text and help description.
     #   [0] = Command name, [1] = Off text, [2] = On text, [3] = Help text
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #   - Valid values: Hash with Symbol key and Array of Strings
+    #   - Default: { :window_shadows => [...] }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     WINDOW_SHADOWS_VOCAB = {
       :window_shadows => ["Window Shadows", "Off", "On",
                           "Enable or disable window shadows.\n" \
@@ -133,8 +155,8 @@ module CONFIG
       YEA::SYSTEM::COMMAND_VOCAB.merge!(WINDOW_SHADOWS_VOCAB)
     end
     
-  end # CONFIG::WINDOW_SHADOWS
-end # CONFIG
+  end # Hammy::WindowShadows
+end # Hammy
 
 #==============================================================================
 # ▼ Script Dependencies Check
@@ -174,7 +196,7 @@ if $imported[:Theo_GlobalOption]
     #--------------------------------------------------------------------------
     # * Alias Method Definitions                                       [Custom]
     #--------------------------------------------------------------------------
-    alias_method :window_shadows_optiondata_initialize, :initialize
+    alias_method :window_shadows_optiondata_initialize, :initialize unless $@
     
     #--------------------------------------------------------------------------
     # * Object Initialization                                           [Alias]
@@ -230,15 +252,15 @@ class Window_SystemOptions < Window_Command
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :window_shadows_win_sysopt_draw_item, :draw_item
-  alias_method :window_shadows_win_sysopt_cursor_change, :cursor_change
-  alias_method :window_shadows_win_sysopt_make_comm_list, :make_command_list
+  alias_method :window_shadows_win_sysopt_draw_item, :draw_item unless $@
+  alias_method :window_shadows_win_sysopt_crsr_chng, :cursor_change unless $@
+  alias_method :window_shadows_win_sysopt_mk_cmd, :make_command_list unless $@
   
   #--------------------------------------------------------------------------
   # * Create Command List                                             [Alias]
   #--------------------------------------------------------------------------
   def make_command_list
-    window_shadows_win_sysopt_make_comm_list
+    window_shadows_win_sysopt_mk_cmd
     inject_window_shadows_command
   end
   
@@ -247,7 +269,7 @@ class Window_SystemOptions < Window_Command
   #--------------------------------------------------------------------------
   def inject_window_shadows_command
     anchor_index = @list.find_index { |item| 
-      item[:symbol] == CONFIG::WINDOW_SHADOWS::WINDOW_SHADOWS_INSERT_ANCHOR 
+      item[:symbol] == Hammy::WindowShadows::WINDOW_SHADOWS_INSERT_ANCHOR 
     }
     
     if anchor_index
@@ -310,7 +332,7 @@ class Window_SystemOptions < Window_Command
     if current_symbol == :window_shadows
       change_window_shadows_toggle(direction)
     else
-      window_shadows_win_sysopt_cursor_change(direction)
+      window_shadows_win_sysopt_crsr_chng(direction)
     end
   end
   

@@ -1,32 +1,43 @@
+# encoding: utf-8
 #==============================================================================
-# ▼ Hammy - FF9 Choice Window v1.02
+# ▼ Hammy - FF9 Choice Window v1.03
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 05.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: None
+# -- Optional: Hammy - FF9 Windowskin System v1.01+,
+#              Hammy - Window Shadows v1.04+,
+#              Hammy - Window Headers v1.02+
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Jupiter Penguin (ChoiceEX, merge and condition logic),
-#             Yami (Pop Message, bubble tag logic),
-#             Yanfly (Documentation style)
+#             Yami (Pop Message, bubble tag logic)
 # -- License: MIT License
 #==============================================================================
 
-$imported = {} if $imported.nil?
+$imported ||= {}
 $imported[:hammy_ff9_choice_window] = true
 
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 05.05.2026 - Bubble positioning now dynamically resolves sprite height from
-#              Spriteset_Map to calculate the top of the target sprite, ensuring
-#              consistent spacing regardless of sprite dimensions. (v1.02)
-# 06.12.2025 - Consolidated arrow images into a single spritesheet,
+# 25.05.2026 - (v1.03) Fixed unused variable warning in calc_window_height.
+#              Applied new documentation conventions.
+#              Migrated configuration modules to Hammy::PascalCase naming.
+#              Added unless $@ guards to alias definitions.
+#              Standardized and shortened alias names.
+# 
+# 05.05.2026 - (v1.02) Bubble positions now dynamically resolve sprite height
+#              from Spriteset_Map to calculate the top of the target sprite,
+#              ensuring uniform spacing regardless of sprite dimensions.
+# 
+# 06.12.2025 - (v1.01) Consolidated arrow images into a single spritesheet,
 #              refactored bubble tag and shadow sprites into Sprite_BubbleTag
 #              class for centralized management, cached shared sprite in
 #              Scene_Map instead of recreating per window, added Hammy Window
 #              Shadows compatibility, added auto-close timer, changed :B to
 #              navigation shortcut (jumps to last choice), and general
-#              optimizations. (v1.01)
-# 05.11.2025 - Initial release. (v1.00)
+#              optimizations.
+# 
+# 05.11.2025 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -56,7 +67,7 @@ $imported[:hammy_ff9_choice_window] = true
 # ★ Window type override support via Hammy FF9 Windowskin System
 # 
 # -----------------------------------------------------------------------------
-# ► Customization System
+# ► Choice Customization Features
 # -----------------------------------------------------------------------------
 # ★ Configurable choice window display settings
 # ★ Configurable compact spacing for empty text lines
@@ -64,7 +75,7 @@ $imported[:hammy_ff9_choice_window] = true
 # ★ Support for complex conditions using game state references
 # 
 # -----------------------------------------------------------------------------
-# ► Technical Features
+# ► Choice Technical Features
 # -----------------------------------------------------------------------------
 # ★ Automatic window centering when position not specified
 # ★ Automatic bubble positioning with boundary corrections
@@ -101,9 +112,9 @@ $imported[:hammy_ff9_choice_window] = true
 # ► Game_Interpreter (Class)
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
-#   - command_101 → ff9_choice_game_interpreter_command_101
+#   - command_101 → ff9_choice_gi_command_101
 # 
-# ★ Overwrite Methods:
+# ★ Overridden Methods:
 #   - setup_choices
 #   - command_404
 # 
@@ -115,13 +126,13 @@ $imported[:hammy_ff9_choice_window] = true
 #   - dispose → ff9_choice_bubble_dispose
 #   - close → ff9_choice_bubble_close
 #   - update → ff9_choice_bubble_update
-#   - call_cancel_handler → ff9_choice_win_choice_call_cncl_handlr
+#   - call_cancel_handler → ff9_choice_wc_call_cncl_handlr
 #   - update_cursor → ff9_choice_win_choice_update_cursor
 # 
 # ★ Super Methods:
 #   - process_cancel
 # 
-# ★ Overwrite Methods:
+# ★ Overridden Methods:
 #   - line_height
 #   - standard_padding
 #   - contents_height
@@ -162,28 +173,29 @@ $imported[:hammy_ff9_choice_window] = true
 # -----------------------------------------------------------------------------
 # ★ choice_settings(text, x, y, type, bubble, timer, use_index)
 #   Configures the choice window display settings before showing choices.
-#   - text: Array of strings or hashes for text lines above choices
-#           String format: 'Text content' (left-aligned by default)
-#           Hash format: {text: 'Text content', align: :center/:left/:right}
-#           Empty strings use half-height spacing for separation
-#   - x: Optional horizontal position (nil for center, ignored if bubble mode)
-#   - y: Optional vertical position (nil for center, ignored if bubble mode)
-#   - type: Optional windowskin type (:default, :frame, :topbar, :help)
-#           Requires Hammy FF9 Windowskin System
-#   - bubble: Optional bubble configuration hash (default: {event_id: nil})
-#             {:event_id}: Target character (0=player, positive=event,
-#                          negative=follower)
-#             {:event_id, :position}: Force vertical position (:above/:below)
-#             {:event_id, :direction}: Force arrow direction (:left/:right)
-#   - timer: Optional timer in frames (default: 0, 0 = disabled)
-#            When > 0, window auto-closes after specified frames
-#            Timer starts when window is fully opened (openness == 255)
-#            Plays decision sound (Sound.play_ok) when timer expires
-#   - use_index: Optional boolean (default: false)
-#                When timer expires: true = use current selected index,
-#                                   false = use cancel case (or last choice
-#                                   if cancel is disabled)
-#   - Returns: nil
+#   - Parameters:
+#     - text: Array of strings or hashes for text lines above choices
+#             String format: 'Text content' (left-aligned by default)
+#             Hash format: {text: 'Text content', align: :center/:left/:right}
+#             Empty strings use half-height spacing for separation
+#     - x: Optional horizontal position (nil for center, ignored if bubble mode)
+#     - y: Optional vertical position (nil for center, ignored if bubble mode)
+#     - type: Optional windowskin type (:default, :frame, :topbar, :help)
+#             Requires Hammy FF9 Windowskin System
+#     - bubble: Optional bubble configuration hash (default: {event_id: nil})
+#       - :event_id: Target character (0=player, positive=event,
+#                    negative=follower)
+#       - :position: Force vertical position (:above/:below)
+#       - :direction: Force arrow direction (:left/:right)
+#     - timer: Optional timer in frames (default: 0, 0 = disabled)
+#       - When > 0, window auto-closes after specified frames
+#       - Timer starts when window is fully opened (openness == 255)
+#       - Plays decision sound (Sound.play_ok) when timer expires
+#     - use_index: Optional boolean (default: false)
+#                  When timer expires: true = use current selected index,
+#                                     false = use cancel case (or last choice
+#                                     if cancel is disabled)
+#   - Returns: Nil
 # 
 #   NOTE: :B input is now a navigation shortcut. Pressing :B will play the
 #         cancel sound and jump to the last visible choice in the window.
@@ -304,7 +316,7 @@ $imported[:hammy_ff9_choice_window] = true
 # 
 # Usage: \cc[:key_name] where :key_name is defined in PREDEFINED_FORMULAS
 # 
-# In CONFIG::FF9_CHOICES::PREDEFINED_FORMULAS:
+# In Hammy::FF9ChoiceWindow::PREDEFINED_FORMULAS:
 #   - has_potion: "p.has_item?($data_items[1])"
 #   - early_game: "sys.playtime < 3600"
 #   - high_level: "a1.level >= 50"
@@ -332,7 +344,7 @@ $imported[:hammy_ff9_choice_window] = true
 #==============================================================================
 # ▼ Recommended Scripts
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# The following scripts are highly recommended for optimal performance:
+# The following script is recommended for optimal performance:
 # 
 # -----------------------------------------------------------------------------
 # ► Text Cache v1.04 by Mithran
@@ -353,20 +365,17 @@ $imported[:hammy_ff9_choice_window] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
+# ★ If using Hammy - FF9 Windowskin System, place this script ABOVE it.
+# 
+# ★ If using Hammy - Window Shadows, place this script ABOVE it.
+# 
+# ★ If using Hammy - Window Headers, place this script ABOVE it.
+# 
 #==============================================================================
 # ▼ Compatibility
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # This script is made strictly for RPG Maker VX Ace. It is highly unlikely that
 # it will run with RPG Maker VX without adjusting.
-# 
-# ★ If using Hammy FF9 Windowskin System, place this script ABOVE the
-#   Windowskin System script.
-# 
-# ★ If using Hammy Window Shadows, place this script ABOVE the Window Shadows
-#   script.
-# 
-# ★ If using Hammy Window Headers, place this script ABOVE the Window Headers
-#   script.
 # 
 #==============================================================================
 
@@ -376,28 +385,45 @@ $imported[:hammy_ff9_choice_window] = true
 #  Configuration settings for the FF9 Choice Window system.
 #==============================================================================
 
-module CONFIG
-  module FF9_CHOICES
+module Hammy
+  module FF9ChoiceWindow
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Choice Window Display Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the visual appearance and behavior of choice windows including
-    # text line spacing, padding, and cursor positioning.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the visual appearance and behavior of choice windows
+    # including text line spacing, padding, and cursor positioning.
     # 
-    # LINE_HEIGHT: Height of each text line in pixels for choice windows
-    #   Uses default font size by default, can be set to any integer value
-    # STANDARD_PADDING: Window padding size in pixels for choice windows
-    #   Controls the internal spacing between window borders and content
-    # WINDOW_MIN_WIDTH: Minimum starting width for choice window calculations
-    #   Prevents window from being too narrow, set to 0 for automatic width
-    # CURSOR_OFFSET_X: Horizontal offset for the cursor in choice windows
-    #   Controls the spacing between window edge and choice command text
-    # COMPACT_SPACING: Enable compact spacing for empty text lines
-    #   When true, empty text lines use half-height spacing for separation
-    # COMPACT_LINE_HEIGHT: Height for empty lines when compact spacing enabled
-    #   Pixel height used for empty text lines when COMPACT_SPACING is true
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # LINE_HEIGHT: Height of each text line in pixels for choice windows.
+    #   Uses default font size by default, can be set to any integer value.
+    #   - Valid values: Any integer value
+    #   - Default: Font.default_size
+    # 
+    # STANDARD_PADDING: Window padding size in pixels for choice windows.
+    #   Controls the internal spacing between window borders and content.
+    #   - Valid values: Any integer value
+    #   - Default: 12
+    # 
+    # WINDOW_MIN_WIDTH: Minimum starting width for choice calculations.
+    #   Prevents window from being too narrow, set to 0 for automatic width.
+    #   - Valid values: Any integer value (0 for auto)
+    #   - Default: 0
+    # 
+    # CURSOR_OFFSET_X: Horizontal offset for the cursor in choice windows.
+    #   Controls the spacing between window edge and choice command text.
+    #   - Valid values: Any integer value
+    #   - Default: 16
+    # 
+    # COMPACT_SPACING: Enable compact spacing for empty text lines.
+    #   When true, empty text lines use reduced height for separation.
+    #   - Valid values: true or false
+    #   - Default: true
+    # 
+    # COMPACT_LINE_HEIGHT: Empty line height when compact spacing is enabled.
+    #   Pixel height used for empty text lines when COMPACT_SPACING is true.
+    #   - Valid values: Any integer value
+    #   - Default: 6
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     LINE_HEIGHT = Font.default_size
     STANDARD_PADDING = 12
     CURSOR_OFFSET_X = 16
@@ -405,46 +431,51 @@ module CONFIG
     COMPACT_SPACING = true
     COMPACT_LINE_HEIGHT = 6
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Predefined Condition Formulas -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure reusable condition formulas that can be referenced by symbol
     # keys in choice conditions. Useful for complex conditions that are too
     # long for the choice text input field or frequently reused.
     # 
-    # Usage in events: \\cc[:key_name] instead of the full formula
-    # 
-    # Example formulas:
-    #   has_potion: "p.has_item?($data_items[1])"
-    #   early_game: "sys.playtime < 3600"
-    #   high_level: "a1.level >= 50"
-    #   rich: "p.gold >= 10000"
-    #   in_town: "map.map_id == 5"
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # PREDEFINED_FORMULAS: Hash mapping symbol keys to condition strings.
+    #   Usage in events: \cc[:key_name] instead of the full formula.
+    #   Example formulas:
+    #     has_potion: "p.has_item?($data_items[1])"
+    #     early_game: "sys.playtime < 3600"
+    #     high_level: "a1.level >= 50"
+    #     rich:       "p.gold >= 10000"
+    #     in_town:    "map.map_id == 5"
+    #   - Valid values: Hash with Symbol keys and String values
+    #   - Default: {}
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     PREDEFINED_FORMULAS = {
       # :key_name: "condition_formula",
       # :another_key: "another_formula"
     }.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Bubble Positioning Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the positioning offsets and thresholds for bubble-style choice
-    # windows. These settings control how choice windows position themselves
-    # relative to target characters.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the positioning offsets and thresholds for bubble-style
+    # choice windows. These settings control how choice windows position
+    # themselves relative to target characters.
     # 
-    # y_offset_below: Vertical offset when window is positioned below character
-    #   Distance in pixels from character screen_y to window top when below
-    # y_offset_above: Vertical gap when window is positioned above character
-    #   Distance in pixels from the top of the target sprite to the bottom of
-    #   the window. The sprite height is resolved dynamically from Spriteset_Map
-    # tag_y_offset_below: Vertical offset when arrow is below window
-    #   Distance in pixels from window bottom to arrow sprite position
-    # tag_y_offset_above: Vertical offset when arrow is above window
-    #   Distance in pixels from window top to arrow sprite position
-    # narrow_width: Threshold width for narrow window centering mode
-    #   Narrow windows center on arrow sprite rather than character
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # BUBBLE_POSITION: Hash containing all bubble positioning configuration.
+    #   y_offset_below: Vertical offset for windows positioned below a target.
+    #     Distance in pixels from character screen_y to window top when below.
+    #   y_offset_above: Vertical gap for windows positioned above a target.
+    #     Distance in pixels from the top of the target sprite to the bottom
+    #     of the window. The sprite height is resolved dynamically.
+    #   tag_y_offset_below: Vertical offset when arrow is below window.
+    #     Distance in pixels from window bottom to arrow sprite position.
+    #   tag_y_offset_above: Vertical offset when arrow is above window.
+    #     Distance in pixels from window top to arrow sprite position.
+    #   narrow_width: Threshold width for narrow window centering mode.
+    #     Narrow windows center on arrow sprite rather than character.
+    #   - Valid values: Hash with defined symbol keys and integer values
+    #   - Default: { y_offset_below: 16, y_offset_above: 16, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_POSITION = {
       y_offset_below: 16,
       y_offset_above: 16,
@@ -453,73 +484,84 @@ module CONFIG
       narrow_width: 80
     }.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Default Bubble Arrow Sprite -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the sprite filename for bubble arrow graphics. This sprite
     # sheet contains all four arrow directions in a 2x2 grid layout (64x64px).
     # The sprite file should be placed in the Graphics/System folder.
     # 
-    # Sprite Sheet Layout (64x64 pixels):
-    #   - (0-31, 0-31): up_left
-    #   - (32-63, 0-31): up_right
-    #   - (0-31, 32-63): down_left
-    #   - (32-63, 32-63): down_right
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # BUBBLE_SPRITESHEET: Sprite filename for bubble arrow graphics.
+    #   Sprite Sheet Layout (64x64 pixels):
+    #     - (0-31, 0-31): up_left
+    #     - (32-63, 0-31): up_right
+    #     - (0-31, 32-63): down_left
+    #     - (32-63, 32-63): down_right
+    #   - Valid values: String containing filename without extension
+    #   - Default: 'BubbleTag'
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_SPRITESHEET = 'BubbleTag'.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Colored Bubble Arrow Sprites -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure colored bubble arrow sprite sheets for integration with the
-    # Hammy FF9 Windowskin System. These sprite sheets automatically match the
-    # current windowskin color theme when the system is active.
+    # Hammy FF9 Windowskin System. These sprite sheets automatically match
+    # the current windowskin color theme when the system is active.
     # 
-    # Each sprite sheet uses the same 2x2 grid layout as the default sprite.
-    # 
-    # grey: Grey-themed arrow sprite sheet for grey windowskins
-    # blue: Blue-themed arrow sprite sheet for blue windowskins
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # BUBBLE_ARROWS_COLORED: Hash mapping color themes to sprite filenames.
+    #   Each sprite sheet uses the same 2x2 grid layout as the default.
+    #   grey: Grey-themed arrow sprite sheet for grey windowskins.
+    #   blue: Blue-themed arrow sprite sheet for blue windowskins.
+    #   - Valid values: Hash with Symbol keys and String values
+    #   - Default: { grey: 'BubbleTag_Grey', blue: 'BubbleTag_Blue' }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_ARROWS_COLORED = {
       grey: 'BubbleTag_Grey',
       blue: 'BubbleTag_Blue'
     }.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Shadow Spritesheet -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the shadow sprite filename for bubble tag arrows for integration
-    # with Hammy Window Shadows. This sprite sheet contains all four arrow
-    # directions in a 2x2 grid layout (64x64px). The sprite file should be
-    # placed in the Graphics/System folder.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the shadow sprite filename for bubble tag arrows for
+    # integration with Hammy Window Shadows. This sprite sheet contains all
+    # four arrow directions in a 2x2 grid layout (64x64px). The sprite file
+    # should be placed in the Graphics/System folder.
     # 
-    # Shadow sprite sheet uses the same layout as the main bubble tag sprite.
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # SHADOW_SPRITESHEET: Shadow sprite filename for bubble tag arrows.
+    #   Shadow sprite sheet uses the same layout as the main bubble tag.
+    #   - Valid values: String containing filename without extension
+    #   - Default: 'BubbleTag_Shadow'
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SHADOW_SPRITESHEET = 'BubbleTag_Shadow'.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Bubble Tag Shadow Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure shadow sprite positioning and appearance for bubble tag arrows.
-    # When Window Shadows script is active and enabled, a second shadow sprite
-    # is created below the main bubble tag sprite (z-1) with configurable
-    # offsets and opacity.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure shadow sprite positioning and appearance for bubble tag
+    # arrows. When Window Shadows script is active and enabled, a second
+    # shadow sprite is created below the main bubble tag sprite (z-1) with
+    # configurable offsets and opacity.
     # 
-    # shadow_offset_x: Horizontal offset for shadow sprite in pixels
-    #   Positive values move shadow to the right
-    # shadow_offset_y: Vertical offset for shadow sprite in pixels
-    #   Positive values move shadow downward
-    # shadow_opacity: Opacity value for shadow sprite (0-255)
-    #   Lower values create more transparent shadows
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # SHADOW_POSITION: Hash containing bubble tag shadow configuration.
+    #   shadow_offset_x: Horizontal offset for shadow sprite in pixels.
+    #     Positive values move shadow to the right.
+    #   shadow_offset_y: Vertical offset for shadow sprite in pixels.
+    #     Positive values move shadow downward.
+    #   shadow_opacity: Opacity value for shadow sprite (0-255).
+    #     Lower values create more transparent shadows.
+    #   - Valid values: Hash with defined symbol keys and integer values
+    #   - Default: { shadow_offset_x: 2, shadow_offset_y: 2, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SHADOW_POSITION = {
       shadow_offset_x: 2,
       shadow_offset_y: 2,
       shadow_opacity: 120
     }.freeze
     
-  end # FF9_CHOICES
-end # CONFIG
+  end # Hammy::FF9ChoiceWindow
+end # Hammy
 
 #==============================================================================
 # ▼ End of Documentation
@@ -558,8 +600,8 @@ class Game_Message
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_choice_game_message_initialize, :initialize
-  alias_method :ff9_choice_game_message_clear, :clear
+  alias_method :ff9_choice_game_message_initialize, :initialize unless $@
+  alias_method :ff9_choice_game_message_clear, :clear unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -631,7 +673,7 @@ class Game_Interpreter
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_choice_game_interpreter_command_101, :command_101
+  alias_method :ff9_choice_gi_command_101, :command_101 unless $@
   
   #--------------------------------------------------------------------------
   # * Show Text                                                       [Alias]
@@ -773,11 +815,11 @@ class Sprite_BubbleTag < Sprite
   def get_config_module(window_class)
     case window_class
     when Window_ChoiceList
-      CONFIG::FF9_CHOICES
+      Hammy::FF9ChoiceWindow
     when Window_Message
-      CONFIG::FF9_DIALOG
+      Hammy::FF9DialogSystem
     else
-      CONFIG::FF9_CHOICES
+      Hammy::FF9ChoiceWindow
     end
   end
   
@@ -970,12 +1012,12 @@ class Window_ChoiceList < Window_Command
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_choice_win_choice_initialize, :initialize
-  alias_method :ff9_choice_bubble_dispose, :dispose
-  alias_method :ff9_choice_bubble_close, :close
-  alias_method :ff9_choice_bubble_update, :update
-  alias_method :ff9_choice_win_choice_call_cncl_handlr, :call_cancel_handler
-  alias_method :ff9_choice_win_choice_update_cursor, :update_cursor
+  alias_method :ff9_choice_win_choice_initialize, :initialize unless $@
+  alias_method :ff9_choice_bubble_dispose, :dispose unless $@
+  alias_method :ff9_choice_bubble_close, :close unless $@
+  alias_method :ff9_choice_bubble_update, :update unless $@
+  alias_method :ff9_choice_wc_call_cncl_handlr, :call_cancel_handler unless $@
+  alias_method :ff9_choice_win_choice_update_cursor, :update_cursor unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -984,12 +1026,12 @@ class Window_ChoiceList < Window_Command
     @graphics_width = Graphics.width
     @graphics_height = Graphics.height
     @windowskin_name = nil
-    @line_height = CONFIG::FF9_CHOICES::LINE_HEIGHT
-    @standard_padding = CONFIG::FF9_CHOICES::STANDARD_PADDING
-    @cursor_offset_x = CONFIG::FF9_CHOICES::CURSOR_OFFSET_X
-    @compact_spacing = CONFIG::FF9_CHOICES::COMPACT_SPACING
-    @compact_line_height = CONFIG::FF9_CHOICES::COMPACT_LINE_HEIGHT
-    @min_width = CONFIG::FF9_CHOICES::WINDOW_MIN_WIDTH
+    @line_height = Hammy::FF9ChoiceWindow::LINE_HEIGHT
+    @standard_padding = Hammy::FF9ChoiceWindow::STANDARD_PADDING
+    @cursor_offset_x = Hammy::FF9ChoiceWindow::CURSOR_OFFSET_X
+    @compact_spacing = Hammy::FF9ChoiceWindow::COMPACT_SPACING
+    @compact_line_height = Hammy::FF9ChoiceWindow::COMPACT_LINE_HEIGHT
+    @min_width = Hammy::FF9ChoiceWindow::WINDOW_MIN_WIDTH
     @bubble_tag = nil
     @event_id = nil
     @bubble_position = nil
@@ -1001,7 +1043,7 @@ class Window_ChoiceList < Window_Command
     @timer_countdown = 0
     @timer_active = false
     @timer_started = false
-    @bubble_config = CONFIG::FF9_CHOICES::BUBBLE_POSITION.dup
+    @bubble_config = Hammy::FF9ChoiceWindow::BUBBLE_POSITION.dup
     
     ff9_choice_win_choice_initialize(message_window)
   end
@@ -1259,7 +1301,7 @@ class Window_ChoiceList < Window_Command
   def eval_condition(condition_formula)
     if (condition_formula.is_a?(String) && condition_formula.start_with?(':'))
       symbol_key = condition_formula[1..-1].to_sym
-      predefined = CONFIG::FF9_CHOICES::PREDEFINED_FORMULAS[symbol_key]
+      predefined = Hammy::FF9ChoiceWindow::PREDEFINED_FORMULAS[symbol_key]
       
       unless predefined
         puts "Warning: Predefined formula :#{symbol_key} not found"
@@ -1341,7 +1383,7 @@ class Window_ChoiceList < Window_Command
   def call_cancel_handler
     @timer_active = false
     @timer_countdown = 0
-    ff9_choice_win_choice_call_cncl_handlr
+    ff9_choice_wc_call_cncl_handlr
     $game_message.reset_choice_settings
   end
   
@@ -1408,7 +1450,7 @@ class Window_ChoiceList < Window_Command
   # * Calculate Window Height                                        [Custom]
   #--------------------------------------------------------------------------
   def calc_window_height
-    total_lines, empty_lines = calc_total_lines
+    _total_lines, empty_lines = calc_total_lines
     text_area_lines = has_choice_text? ? $game_message.choice_text.size : 0
     choice_lines = ($game_message.choice_row_max || @list.size)
     display_lines = text_area_lines + choice_lines
@@ -1575,7 +1617,7 @@ class Window_ChoiceList < Window_Command
       close
       $game_message.reset_choice_settings
     else
-      ff9_choice_win_choice_call_cncl_handlr
+      ff9_choice_wc_call_cncl_handlr
       $game_message.reset_choice_settings
     end
   end
@@ -1703,14 +1745,14 @@ class Window_ChoiceList < Window_Command
     return unless $imported[:hammy_ff9_windowskin_system]
     
     unless type
-      type = CONFIG::FF9_WINDOWSKIN.get_window_type(self.class)
+      type = Hammy::FF9WindowskinSystem.get_window_type(self.class)
       return unless type
     else
       return unless [:default, :frame, :topbar, :help].include?(type)
     end
     
     color = $game_system.windowskin_color
-    skin_name = CONFIG::FF9_WINDOWSKIN.get_windowskin(type, color)
+    skin_name = Hammy::FF9WindowskinSystem.get_windowskin(type, color)
     return if @windowskin_name == skin_name
     
     self.windowskin = Cache.system(skin_name)
@@ -1756,9 +1798,9 @@ class Scene_Map < Scene_Base
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_choice_scene_map_start, :start
-  alias_method :ff9_choice_scene_map_update, :update
-  alias_method :ff9_choice_scene_map_terminate, :terminate
+  alias_method :ff9_choice_scene_map_start, :start unless $@
+  alias_method :ff9_choice_scene_map_update, :update unless $@
+  alias_method :ff9_choice_scene_map_terminate, :terminate unless $@
   
   #--------------------------------------------------------------------------
   # * Start Processing                                                [Alias]

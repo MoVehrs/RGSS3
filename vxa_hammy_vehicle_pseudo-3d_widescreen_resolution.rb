@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Vehicle Pseudo-3D × Widescreen Resolution v1.00
+# ▼ Hammy - Vehicle Pseudo-3D × Widescreen Resolution v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: Vehicle Pseudo-3D Database v3.0 by WoodPenguin,
 #              Vehicle Pseudo-3D Main Script v3.0.1 by WoodPenguin,
 #              Vehicle Pseudo-3D OP2 v2.1 by WoodPenguin
@@ -18,7 +18,9 @@ $imported[:hammy_vehicle_pseudo_3d_widescreen] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -39,9 +41,9 @@ $imported[:hammy_vehicle_pseudo_3d_widescreen] = true
 # ★ Elimination of left and right edge tilemap cutoff bands
 # ★ Vehicle-centered snapshot positioning for symmetric coverage
 # ★ Full screen width coverage at every vehicle rotation angle
-# ★ Automatic compatibility with OP2 Field of View Extension
-# ★ Optional compatibility with OP3 Map Zoom configurations
-# ★ Dynamic padding adjustment via OP2 padding writer interface
+# ★ Automatic compatibility with WoodPenguin's Field of View addon
+# ★ Optional compatibility with WoodPenguin's Map Zoom addon
+# ★ Dynamic padding adjustment via Field of View padding writer interface
 # 
 #==============================================================================
 # ▼ Base Classes & Method Modifications
@@ -60,7 +62,7 @@ $imported[:hammy_vehicle_pseudo_3d_widescreen] = true
 # -----------------------------------------------------------------------------
 # ► WdTk::Veh3D::OP2 (Module)
 # -----------------------------------------------------------------------------
-# ★ Added Setters:
+# ★ Added Getters/Setters:
 #   - padding=
 # 
 # -----------------------------------------------------------------------------

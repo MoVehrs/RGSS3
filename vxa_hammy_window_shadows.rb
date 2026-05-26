@@ -1,25 +1,35 @@
+# encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Window Shadows v1.03
+# ▼ Hammy - Window Shadows v1.04
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 27.11.2025
+# -- Last Updated: 25.05.2026
 # -- Requires: None
+# -- Optional: Hammy - FF9 Windowskin System v1.01+
 # -- Recommended: None
-# -- Credits: Yanfly (Documentation style)
+# -- Credits: None
 # -- License: MIT License
 #==============================================================================
 
-$imported = {} if $imported.nil?
+$imported ||= {}
 $imported[:hammy_window_shadows] = true
 
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 27.11.2025 - Fixed shadow sprite persistence during battle transition. (v1.03)
-# 26.10.2025 - Added refresh method to Window_Shadow for dynamic windowskin 
-#              updates when parent window type changes. (v1.02)
-# 24.10.2025 - Changed setter methods from super to alias_method pattern for 
-#              better compatibility. (v1.01)
-# 23.10.2025 - Initial release. (v1.00)
+# 25.05.2026 - (v1.04) Applied new documentation conventions.
+#              Migrated configuration modules to Hammy::PascalCase naming.
+#              Added unless $@ guards to alias definitions.
+#              Standardized and shortened pre_battle_scene alias name.
+# 
+# 27.11.2025 - (v1.03) Fixed shadow sprite persistence during battle transition.
+# 
+# 26.10.2025 - (v1.02) Added refresh method to Window_Shadow for dynamic
+#              windowskin updates when parent window type changes.
+# 
+# 24.10.2025 - (v1.01) Changed setter methods from super to alias_method
+#              pattern for better compatibility.
+# 
+# 23.10.2025 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -41,7 +51,7 @@ $imported[:hammy_window_shadows] = true
 # ★ Explicit z-index management for proper shadow layering
 # 
 # -----------------------------------------------------------------------------
-# ► Customization System
+# ► Shadow Customization Features
 # -----------------------------------------------------------------------------
 # ★ Per-window-class shadow configuration with custom graphics and settings
 # ★ Per-window-type shadow configuration via Windowskin System integration
@@ -49,7 +59,7 @@ $imported[:hammy_window_shadows] = true
 # ★ Shadow opacity scaling based on parent window transparency
 # 
 # -----------------------------------------------------------------------------
-# ► Technical Features
+# ► Shadow Technical Features
 # -----------------------------------------------------------------------------
 # ★ Automatic shadow property updates (position, size, openness and visibility)
 # ★ Dynamic shadow recreation when system is re-enabled
@@ -85,6 +95,28 @@ $imported[:hammy_window_shadows] = true
 #   - visible= → window_shadows_win_base_visible=
 #   - opacity= → window_shadows_win_base_opacity=
 # 
+# -----------------------------------------------------------------------------
+# ► Scene_Map (Class < Scene_Base)
+# -----------------------------------------------------------------------------
+# ★ Alias Methods:
+#   - pre_battle_scene → window_shadows_sm_pre_btl_scn
+# 
+#==============================================================================
+# ▼ Script Calls
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# The following script calls are available for use in events and other scripts.
+# 
+# -----------------------------------------------------------------------------
+# ► Shadow System Control
+# -----------------------------------------------------------------------------
+# ★ $game_system.window_shadows = true
+#   Enables the window shadow system globally.
+#   - All windows will display their configured shadows.
+# 
+# ★ $game_system.window_shadows = false
+#   Disables the window shadow system globally.
+#   - All window shadows will be hidden and disposed.
+# 
 #==============================================================================
 # ▼ General Setup & Usage Guide
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -96,44 +128,23 @@ $imported[:hammy_window_shadows] = true
 # Shadow windowskins are modified versions of standard RPG Maker VX Ace
 # windowskin files. Windowskins are 128x128 pixels in size.
 # 
-# ★ To create a shadow windowskin from a standard windowskin:
+# ★ Step 1: Start with your standard windowskin file (128x128 pixels)
 # 
-# 1. Start with your standard windowskin file (128x128 pixels)
+# ★ Step 2: Keep only the upper-right quadrant (x: 64-128, y: 0-64)
+#   - This section contains the window border graphics
+#   - Everything else should be removed or made transparent
 # 
-# 2. Keep only the upper-right quadrant (x: 64-128, y: 0-64)
-#    - This section contains the window border graphics
-#    - Everything else should be removed or made transparent
+# ★ Step 3: Remove the top and left border segments
+#   - Delete the upper portion of the window frame
+#   - Delete the left portion of the window frame
+#   - Delete the scroll arrows
+#   - Keep only the bottom and right border segments
 # 
-# 3. Remove the top and left border segments
-#    - Delete the upper portion of the window frame
-#    - Delete the left portion of the window frame
-#    - Delete the scroll arrows
-#    - Keep only the bottom and right border segments
+# ★ Step 4: The result should show only the lower-right corner and edges
+#   - This creates the shadow effect when offset behind the main window
 # 
-# 4. The result should show only the lower-right corner and edges
-#    - This creates the shadow effect when offset behind the main window
-# 
-# 5. Place your prepared shadow windowskin files in the Graphics/System folder
-#    and reference them in the configuration settings.
-# 
-#==============================================================================
-# ▼ Script Calls
-#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# The following script calls are available for use anywhere in your game.
-# These methods allow you to control the shadow system during gameplay.
-# 
-# -----------------------------------------------------------------------------
-# ► Shadow System Control
-# -----------------------------------------------------------------------------
-# ★ $game_system.window_shadows = true
-#   Enables the window shadow system globally.
-#   - All windows will display their configured shadows.
-#   - Returns: nil
-# 
-# ★ $game_system.window_shadows = false
-#   Disables the window shadow system globally.
-#   - All window shadows will be hidden and disposed.
-#   - Returns: nil
+# ★ Step 5: Place your prepared shadow windowskin files in the Graphics/System
+#   - Ensure they are referenced properly in the configuration settings
 # 
 #==============================================================================
 # ▼ Instructions
@@ -141,8 +152,7 @@ $imported[:hammy_window_shadows] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
-# ★ If using Hammy FF9 Windowskin System, place this script BELOW the
-#   Windowskin System script.
+# ★ If using Hammy - FF9 Windowskin System, place this script BELOW it.
 # 
 #==============================================================================
 # ▼ Compatibility
@@ -158,22 +168,24 @@ $imported[:hammy_window_shadows] = true
 #  Configuration settings for the Window Shadows system.
 #==============================================================================
 
-module CONFIG
-  module WINDOW_SHADOWS
+module Hammy
+  module WindowShadows
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Default Shadow Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the default shadow appearance for all windows in the game.
-    # These settings control the shadow windowskin graphic, positioning offset,
-    # and transparency. Set windowskin to nil to disable shadows globally.
+    # These settings control the shadow windowskin, offsets, and opacity.
+    # Set windowskin to nil to disable shadows globally across the game.
     # 
-    # DEFAULT_SETTINGS: Hash containing default shadow configuration
-    #   :windowskin - Shadow windowskin filename in Graphics/System folder
-    #   :offset_x - Horizontal shadow offset in pixels (positive = right)
-    #   :offset_y - Vertical shadow offset in pixels (positive = down)
-    #   :opacity - Shadow opacity value (0-255, where 255 is fully opaque)
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # DEFAULT_SETTINGS: Hash containing default shadow configuration.
+    #   :windowskin - Shadow windowskin filename in Graphics/System folder.
+    #   :offset_x - Horizontal shadow offset in pixels (positive = right).
+    #   :offset_y - Vertical shadow offset in pixels (positive = down).
+    #   :opacity - Shadow opacity value (0-255, where 255 is fully opaque).
+    #   - Valid values: Hash with Symbol keys and specific value types
+    #   - Default: { :windowskin => "Window_Shadow", :offset_x => 3, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     DEFAULT_SETTINGS = {
       :windowskin => "Window_Shadow",
       :offset_x => 3,
@@ -183,44 +195,50 @@ module CONFIG
       :opacity => 120
     }
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Excluded Windows -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure window classes that should not display shadows. Add window
     # class constants to exclude specific windows from the shadow
     # system entirely.
     # 
-    # EXCLUDED_WINDOWS: Array of window class constants to exclude
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # EXCLUDED_WINDOWS: Array of window class constants to exclude.
+    #   - Valid values: Array containing Window Class constants
+    #   - Default: [Window_BattleLog]
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     EXCLUDED_WINDOWS = [Window_BattleLog]
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Explicit Z-Index Windows -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure window classes that require explicit z-index assignment during
-    # initialization. Windows without explicit z-values may cause their shadows
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure window classes requiring explicit z-index assignment during
+    # initialization. Windows without explicit z-values can cause shadows
     # to appear above other parent windows when shadows are re-enabled.
     # 
-    # EXPLICIT_Z_WINDOWS: Array of window class constants requiring
-    #                     explicit z-index assignment (z = 200)
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # EXPLICIT_Z_WINDOWS: Array of window classes requiring explicit z.
+    #   These windows will be assigned z = 200 during initialization.
+    #   - Valid values: Array containing Window Class constants
+    #   - Default: [Window_ChoiceList]
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     EXPLICIT_Z_WINDOWS = [Window_ChoiceList]
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Window Class Shadow Configuration -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure custom shadow settings for specific window classes. This allows
-    # you to override the default shadow appearance for individual window types
-    # with per-class customization of shadow graphics and positioning.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure custom shadow settings for specific window classes. This
+    # allows you to override default shadow appearances for individual
+    # window types with per-class customization of graphics and offsets.
     # 
-    # WINDOWSKIN_MAP: Hash mapping window class names to custom shadow settings
+    # WINDOWSKIN_MAP: Hash mapping window class names to custom settings.
     #   Format: "ClassName" => { 
     #     :windowskin => "Name", 
     #     :offset_x => x, 
     #     :offset_y => y, 
     #     :opacity => o
     #   }
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #   - Valid values: Hash with String keys and Hash values
+    #   - Default: { "Window_MenuCommand" => {...}, "Window_Gold" => {...} }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     WINDOWSKIN_MAP = {
        "Window_MenuCommand" => {
          :windowskin => "Window_Shadow_Red",
@@ -240,14 +258,14 @@ module CONFIG
       },
     }
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Window Type Shadow Map -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure custom shadow settings for window types when using the Hammy 
-    # FF9 Windowskin System. This allows shadows to automatically match the
-    # visual style of different window types defined in the Windowskin System.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure custom shadow settings for window types when using the
+    # Hammy FF9 Windowskin System. This allows shadows to automatically
+    # match the visual style of window types defined in the system.
     # 
-    # WINDOW_TYPE_MAP: Hash mapping window types to custom shadow settings
+    # WINDOW_TYPE_MAP: Hash mapping window types to custom shadow settings.
     #   Format: :window_type => { 
     #     :windowskin => "Name", 
     #     :offset_x => x, 
@@ -255,7 +273,9 @@ module CONFIG
     #     :opacity => o
     #   }
     #   Available types: :default, :frame, :topbar, :help
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #   - Valid values: Hash with Symbol keys and Hash values
+    #   - Default: { :default => { ... }, :frame => { ... }, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     WINDOW_TYPE_MAP = {
       :default => {
         :windowskin => "Window_Shadow_Default",
@@ -332,7 +352,7 @@ module CONFIG
       alias_name = "window_shadows_#{class_name}_initialize".to_sym
       
       window_class.class_eval do
-        alias_method alias_name, :initialize
+        alias_method alias_name, :initialize unless $@
         
         define_method(:initialize) do |*args, &block|
           send(alias_name, *args, &block)
@@ -341,8 +361,8 @@ module CONFIG
       end
     end
     
-  end # CONFIG::WINDOW_SHADOWS
-end # CONFIG
+  end # Hammy::WindowShadows
+end # Hammy
 
 #==============================================================================
 # ** Game_System
@@ -360,7 +380,7 @@ class Game_System
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :window_shadows_game_sys_initialize, :initialize
+  alias_method :window_shadows_game_sys_initialize, :initialize unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -382,17 +402,17 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :window_shadows_win_base_initialize, :initialize
-  alias_method :window_shadows_win_base_dispose, :dispose
-  alias_method :window_shadows_win_base_update, :update
-  alias_method :window_shadows_win_base_x=, :x=
-  alias_method :window_shadows_win_base_y=, :y=
-  alias_method :window_shadows_win_base_z=, :z=
-  alias_method :window_shadows_win_base_width=, :width=
-  alias_method :window_shadows_win_base_height=, :height=
-  alias_method :window_shadows_win_base_openness=, :openness=
-  alias_method :window_shadows_win_base_visible=, :visible=
-  alias_method :window_shadows_win_base_opacity=, :opacity=
+  alias_method :window_shadows_win_base_initialize, :initialize unless $@
+  alias_method :window_shadows_win_base_dispose, :dispose unless $@
+  alias_method :window_shadows_win_base_update, :update unless $@
+  alias_method :window_shadows_win_base_x=, :x= unless $@
+  alias_method :window_shadows_win_base_y=, :y= unless $@
+  alias_method :window_shadows_win_base_z=, :z= unless $@
+  alias_method :window_shadows_win_base_width=, :width= unless $@
+  alias_method :window_shadows_win_base_height=, :height= unless $@
+  alias_method :window_shadows_win_base_openness=, :openness= unless $@
+  alias_method :window_shadows_win_base_visible=, :visible= unless $@
+  alias_method :window_shadows_win_base_opacity=, :opacity= unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -537,14 +557,17 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   def create_shadow_window
     return if @is_shadow
-    return if CONFIG::WINDOW_SHADOWS::EXCLUDED_WINDOWS.include?(self.class)
+    return if Hammy::WindowShadows::EXCLUDED_WINDOWS.include?(self.class)
     
     window_type = nil
     if $imported && $imported[:hammy_ff9_windowskin_system]
-      window_type = CONFIG::FF9_WINDOWSKIN.get_window_type(self.class)
+      window_type = Hammy::FF9WindowskinSystem.get_window_type(self.class)
     end
     
-    settings = CONFIG::WINDOW_SHADOWS.get_shadow_settings(self.class, window_type)
+    settings = Hammy::WindowShadows.get_shadow_settings(
+      self.class, window_type
+    )
+    
     return unless settings[:windowskin]
     
     @shadow_window = Window_Shadow.new(settings)
@@ -601,7 +624,10 @@ class Window_Shadow < Window_Base
   def refresh(parent_window, window_type = nil)
     window_class = parent_window.class
     
-    settings = CONFIG::WINDOW_SHADOWS.get_shadow_settings(window_class, window_type)
+    settings = Hammy::WindowShadows.get_shadow_settings(
+      window_class,
+      window_type
+    )
     return unless settings[:windowskin]
     
     @offset_x = settings[:offset_x]
@@ -641,13 +667,13 @@ class Scene_Map < Scene_Base
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :window_shadows_scene_map_pre_battle_scene, :pre_battle_scene
+  alias_method :window_shadows_sm_pre_btl_scn, :pre_battle_scene unless $@
   
   #--------------------------------------------------------------------------
   # * Preprocessing for Battle Screen Transition                      [Alias]
   #--------------------------------------------------------------------------
   def pre_battle_scene
-    window_shadows_scene_map_pre_battle_scene
+    window_shadows_sm_pre_btl_scn
     instance_variables.each do |var_name|
       instance_var = instance_variable_get(var_name)
       next unless instance_var.is_a?(Window)
@@ -679,5 +705,5 @@ end # Scene_Map
 #==============================================================================
 # 
 # ▼ End of File
-#
+# 
 #==============================================================================

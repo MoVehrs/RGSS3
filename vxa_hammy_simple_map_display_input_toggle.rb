@@ -1,10 +1,10 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - Simple Map Display × Input Toggle v1.00
+# ▼ Hammy - Simple Map Display × Input Toggle v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 17.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: Simple Map Display v2.4 by WoodPenguin
-# -- Optional: Hammy - MKXP-Z Input Constants v1.00
+# -- Optional: Hammy - MKXP-Z Input Constants v1.01+
 # -- Recommended: None
 # -- Credits: WoodPenguin (Simple Map Display system)
 # -- License: MIT License
@@ -16,7 +16,9 @@ $imported[:hammy_simple_map_display_input_toggle] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 17.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 17.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -35,7 +37,7 @@ $imported[:hammy_simple_map_display_input_toggle] = true
 # -----------------------------------------------------------------------------
 # ► Input Toggle Features
 # -----------------------------------------------------------------------------
-# ★ Configurable map display cycle order via TOGGLE_CYCLE
+# ★ Configurable map display cycle order via module setting
 # ★ Keyboard toggle support through RGSS3 and mkxp-z input routing
 # ★ Explicit RGSS and SDL routing via tagged key arrays
 # ★ Optional Windows Virtual-Key integer support on mkxp-z
@@ -58,8 +60,8 @@ $imported[:hammy_simple_map_display_input_toggle] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
-# ★ This script requires WoodPenguin - Simple Map Display and must be
-#   placed BELOW it.
+# ★ This script requires WoodPenguin - Simple Map Display and must be placed
+#   BELOW it.
 # 
 # ★ If using Hammy - MKXP-Z Input Constants, place this script BELOW it.
 # 
@@ -89,35 +91,36 @@ module Hammy
     #   Include 0 to pass through the hidden state as part of the cycle.
     #   Remove 0 to keep the map visible and only cycle between modes.
     #   Set to [] to disable the toggle entirely.
-    #   - Array of integers corresponding to WdTk::SimpMap::Data keys
+    #   - Valid values: Array of integers corresponding to WdTk::SimpMap keys
     #   - Default: [0, 1, 2, 3]
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     TOGGLE_CYCLE = [0, 1, 2, 3]
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # - Keyboard Toggle -
+    # - Keyboard Toggle Settings -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the keyboard key used to cycle the map display mode.
     # 
-    # TOGGLE_KEY: Keyboard key used as the map display toggle.
+    # TOGGLE_KEY: Keyboard key used as the map display toggle trigger.
     #   Bare RGSS3 symbols are routed through Input.trigger?. Tagged arrays
     #   can force routing with [:rgss, :SYM] or [:sdl, :SYM]. SDL routing
     #   and bare VK integers are mkxp-z only and use Input.triggerex?.
-    #   - RGSS symbol, tagged array, or VK integer
+    #   - Valid values: RGSS symbol, tagged array, or VK integer
     #   - Default: :CTRL
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     TOGGLE_KEY = :CTRL
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # - Controller Toggle (mkxp-z only) -
+    # - Controller Button Settings (mkxp-z only) -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the controller button used to cycle the map display mode.
+    # Configure the controller button used to cycle the map display mode
+    # on mkxp-z.
     # 
-    # TOGGLE_BUTTON: Controller button used as the map display toggle.
-    #   Only needed when TOGGLE_KEY has no default controller binding, such
-    #   as :CTRL, an SDL-only key, or a raw VK integer. Set to nil to
-    #   disable the separate controller trigger.
-    #   - Any controller button symbol, or nil
+    # TOGGLE_BUTTON: Controller button used as map display toggle trigger.
+    #   Only needed when TOGGLE_KEY has no default controller binding,
+    #   such as an SDL-only key or a raw VK integer. Set to nil to disable
+    #   the separate controller trigger.
+    #   - Valid values: Any controller button symbol, or nil
     #   - Default: :BACK
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     TOGGLE_BUTTON = :BACK

@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - MKXP-Z Screenshot v1.00
+# ▼ Hammy - MKXP-Z Screenshot v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 17.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: mkxp-z (Ruby 3.1)
-# -- Optional: Hammy - MKXP-Z Input Constants v1.00
-# -- Recommended: Hammy - Yanfly System Options - Date Format Addon v1.00
+# -- Optional: Hammy - MKXP-Z Input Constants v1.01+
+# -- Recommended: Hammy - Yanfly System Options - Date Format Addon v1.00+
 # -- Credits: None
 # -- License: MIT License
 #==============================================================================
@@ -17,7 +17,10 @@ $imported[:hammy_mkxp_z_screenshot] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 17.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 17.05.2026 - (v1.00) Initial release.
+# 
 #==============================================================================
 # ▼ Introduction
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -67,12 +70,14 @@ $imported[:hammy_mkxp_z_screenshot] = true
 # -----------------------------------------------------------------------------
 # ► Screenshot Capture
 # -----------------------------------------------------------------------------
-# The screenshot check runs once per frame from Scene_Base after the normal
-# basic scene update. When the configured trigger fires, the current game screen
-# is captured through Graphics.screenshot and written to disk immediately.
+# The screenshot check runs once per frame from Scene_Base after the standard
+# scene update. When the configured trigger fires, the current game screen is
+# captured via Graphics.screenshot and written to disk immediately.
 # 
 # ★ The default keyboard trigger is :F8.
+# 
 # ★ A separate controller trigger can be enabled for SDL controller buttons.
+# 
 # ★ Do not add a separate controller trigger for RGSS action buttons that
 #   already map to controller input through Input.trigger?.
 # 
@@ -85,7 +90,9 @@ $imported[:hammy_mkxp_z_screenshot] = true
 # 
 # ★ Existing files are never overwritten; a numeric counter suffix is added
 #   when the generated filename is already taken.
+# 
 # ★ The image encoder is selected by the configured file extension.
+# 
 # ★ An optional sound effect can be played after a successful capture.
 # 
 # -----------------------------------------------------------------------------
@@ -96,6 +103,7 @@ $imported[:hammy_mkxp_z_screenshot] = true
 # configured default format.
 # 
 # ★ The optional Date Format Addon provides $game_system.european_format.
+# 
 # ★ Both timestamp layouts are configured separately in the settings below.
 # 
 #==============================================================================
@@ -130,8 +138,8 @@ $imported[:hammy_mkxp_z_screenshot] = true
 #==============================================================================
 # ▼ Compatibility
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script is made strictly for RPG Maker VX Ace running on mkxp-z.
-# It will not run on default RPG Maker VX Ace without mkxp-z.
+# This script is made strictly for RPG Maker VX Ace running on mkxp-z
+# (Ruby 3.1). It will not run on default RPG Maker VX Ace without mkxp-z.
 # 
 #==============================================================================
 
@@ -145,7 +153,7 @@ module Hammy
   module MkxpzScreenshot
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # - Trigger Key -
+    # - Keyboard Key Settings -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the keyboard key used to capture a screenshot.
     # 
@@ -153,21 +161,21 @@ module Hammy
     #   Bare RGSS3 symbols are routed through Input.trigger?. Tagged arrays
     #   can force routing with [:rgss, :SYM] or [:sdl, :SYM]. SDL routing
     #   and bare VK integers are mkxp-z only and use Input.triggerex?.
-    #   - RGSS symbol, tagged array, or VK integer
+    #   - Valid values: RGSS symbol, tagged array, or VK integer
     #   - Default: :F8
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SCREENSHOT_KEY = :F8
     
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # - Controller Button (mkxp-z only) -
+    # - Controller Button Settings (mkxp-z only) -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the controller button used to capture a screenshot on mkxp-z.
     # 
     # SCREENSHOT_BUTTON: Controller button used as the screenshot trigger.
     #   Only needed when SCREENSHOT_KEY has no default controller binding,
-    #   such as :F8, an SDL-only key, or a raw VK integer. Set to nil to
-    #   disable the separate controller trigger.
-    #   - Any controller button symbol, or nil
+    #   such as an SDL-only key or a raw VK integer. Set to nil to disable
+    #   the separate controller trigger.
+    #   - Valid values: Any controller button symbol, or nil
     #   - Default: nil
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SCREENSHOT_BUTTON = nil
@@ -179,17 +187,17 @@ module Hammy
     # 
     # FOLDER_NAME: Folder used for saved screenshots.
     #   Created automatically during startup if it does not already exist.
-    #   - Folder name or relative folder path
+    #   - Valid values: Folder name or relative folder path
     #   - Default: "Screenshots"
     # 
     # BASE_FILENAME: Base name used for generated screenshot filenames.
     #   Combined with timestamp and collision counter by FILENAME_TEMPLATE.
-    #   - String
+    #   - Valid values: String
     #   - Default: "screenshot"
     # 
     # FILE_EXTENSION: Image file extension used by Graphics.screenshot.
     #   mkxp-z automatically selects the encoder based on this extension.
-    #   - "png", "jpg", or "bmp"
+    #   - Valid values: "png", "jpg", or "bmp"
     #   - Default: "png"
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     FOLDER_NAME = "Screenshots"
@@ -203,19 +211,19 @@ module Hammy
     # 
     # EU_TIMESTAMP_FORMAT: Timestamp format used for European date order.
     #   Uses standard Ruby Time#strftime directives.
-    #   - String
+    #   - Valid values: String
     #   - Default: "%d-%m-%Y_%H-%M-%S"
     # 
     # US_TIMESTAMP_FORMAT: Timestamp format used for American date order.
     #   Uses standard Ruby Time#strftime directives.
-    #   - String
+    #   - Valid values: String
     #   - Default: "%Y-%m-%d_%H-%M-%S"
     # 
     # FILENAME_TEMPLATE: Final path template for saved screenshots.
     #   Available placeholders are %{dir}, %{base}, %{time}, %{counter},
     #   and %{ext}. The counter placeholder is empty unless a filename
     #   collision is detected.
-    #   - String using the placeholders above
+    #   - Valid values: String using the placeholders above
     #   - Default: "%{dir}/%{base}_%{time}%{counter}.%{ext}"
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     EU_TIMESTAMP_FORMAT = "%d-%m-%Y_%H-%M-%S"
@@ -229,8 +237,7 @@ module Hammy
     # 
     # FORCE_EUROPEAN_FORMAT: Controls the fallback timestamp date order.
     #   Only used when $game_system.european_format is unavailable.
-    #   - true: Use EU_TIMESTAMP_FORMAT
-    #   - false: Use US_TIMESTAMP_FORMAT
+    #   - Valid values: true: EU_TIMESTAMP_FORMAT, false: US_TIMESTAMP_FORMAT
     #   - Default: false
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     FORCE_EUROPEAN_FORMAT = false
@@ -241,20 +248,20 @@ module Hammy
     # Configure the sound effect played after a screenshot is captured.
     # 
     # PLAY_SOUND: Enables or disables screenshot sound playback.
-    #   - true / false
+    #   - Valid values: true / false
     #   - Default: true
     # 
     # SOUND_NAME: SE filename from the Audio/SE folder.
     #   Do not include the file extension.
-    #   - String
+    #   - Valid values: String
     #   - Default: "Decision1"
     # 
     # SOUND_VOLUME: Playback volume for the screenshot sound effect.
-    #   - 0 to 100
+    #   - Valid values: 0 to 100
     #   - Default: 80
     # 
     # SOUND_PITCH: Playback pitch for the screenshot sound effect.
-    #   - 50 to 150
+    #   - Valid values: 50 to 150
     #   - Default: 100
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     PLAY_SOUND = true
@@ -262,16 +269,17 @@ module Hammy
     SOUND_VOLUME = 80
     SOUND_PITCH = 100
     
-    #========================================================================
-    # ▼ End of Configuration
-    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    #==========================================================================
+    # ▼ End of Documentation
+    #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+    # This marks the end of the documentation and configuration section.
     # Everything below this point is the actual script implementation code.
-    #
+    # 
     # WARNING: Modifying the code below requires advanced Ruby and RGSS3
     # knowledge. Improper changes may cause script errors, game crashes, or
     # data corruption. Only edit if you understand the consequences and have
     # backups of your project.
-    #========================================================================
+    #==========================================================================
     
     #------------------------------------------------------------------------
     # * Instance Variables

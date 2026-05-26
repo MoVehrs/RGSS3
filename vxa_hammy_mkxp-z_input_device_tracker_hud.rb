@@ -1,10 +1,10 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - MKXP-Z Input Device Tracker HUD v1.00
+# ▼ Hammy - MKXP-Z Input Device Tracker HUD v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: mkxp-z (Ruby 3.1),
-#              Hammy - MKXP-Z Input Device Tracker v1.00 or higher
+#              Hammy - MKXP-Z Input Device Tracker v1.01+
 # -- Recommended: None
 # -- Credits: None
 # -- License: MIT License
@@ -16,7 +16,9 @@ $imported[:hammy_mkxp_z_input_device_tracker_hud] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -37,7 +39,7 @@ $imported[:hammy_mkxp_z_input_device_tracker_hud] = true
 # ► Input Device Tracker HUD Features
 # -----------------------------------------------------------------------------
 # ★ Top-right corner device icon reflecting the active input device
-# ★ Three display modes via SHOW_BATTERY_ICON and BATTERY_CHANGES_DEVICE_ICON
+# ★ Configurable display modes for battery and device icons
 # ★ Optional battery icon beside the device icon while a gamepad is active
 # ★ Optional battery-driven device icon override for gamepad states
 # ★ Optional wide keyboard indicator via a flush-adjacent secondary icon
@@ -53,8 +55,8 @@ $imported[:hammy_mkxp_z_input_device_tracker_hud] = true
 # ► Scene_Base (Class)
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
-#   - start     → idt_hud_scene_base_start
-#   - update    → idt_hud_scene_base_update
+#   - start → idt_hud_scene_base_start
+#   - update → idt_hud_scene_base_update
 #   - terminate → idt_hud_scene_base_terminate
 # 
 #==============================================================================
@@ -159,14 +161,14 @@ $imported[:hammy_mkxp_z_input_device_tracker_hud] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
-# ★ This script requires Hammy - MKXP-Z Input Device Tracker and must be
-#   placed BELOW it.
+# ★ This script requires Hammy - MKXP-Z Input Device Tracker and must be placed
+#   BELOW it.
 # 
 #==============================================================================
 # ▼ Compatibility
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script is made strictly for RPG Maker VX Ace running on mkxp-z.
-# It will not run on default RPG Maker VX Ace without mkxp-z.
+# This script is made strictly for RPG Maker VX Ace running on mkxp-z
+# (Ruby 3.1). It will not run on default RPG Maker VX Ace without mkxp-z.
 # 
 #==============================================================================
 
@@ -186,13 +188,13 @@ module Hammy
     # 
     # MARGIN: Gap in pixels between icons and from the screen edges.
     #   Applied between the device icon and the battery icon when both are
-    #   visible, and between the rightmost icon and the top-right screen edge.
-    #   - Any non-negative integer
+    #   visible, and between the rightmost icon and top-right screen edge.
+    #   - Valid values: Any non-negative integer
     #   - Default: 4
     # 
     # Z_LEVEL: Z-depth used for the HUD viewport and all HUD sprites.
     #   A very high value ensures the HUD renders above all scene content.
-    #   - Any integer
+    #   - Valid values: Any integer
     #   - Default: 9999
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     MARGIN = 4
@@ -208,13 +210,13 @@ module Hammy
     #   When true, a second battery icon is drawn beside the device
     #   icon while a gamepad is active. Takes precedence over
     #   BATTERY_CHANGES_DEVICE_ICON when both are true.
-    #   - true / false
+    #   - Valid values: true / false
     #   - Default: false
     # 
     # BATTERY_CHANGES_DEVICE_ICON: Replaces the device icon with a
     #   battery-level-specific icon while a gamepad is active.
     #   Only active when SHOW_BATTERY_ICON is false.
-    #   - true / false
+    #   - Valid values: true / false
     #   - Default: true
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SHOW_BATTERY_ICON = false
@@ -230,14 +232,13 @@ module Hammy
     #   When false (blacklist), the HUD is shown in every scene except
     #   those listed in SCENE_LIST. When true (whitelist), the HUD is
     #   shown only in scenes listed in SCENE_LIST.
-    #   - true / false
+    #   - Valid values: true / false
     #   - Default: false
     # 
     # SCENE_LIST: List of scene classes used as a blacklist or whitelist
     #   depending on SCENE_LIST_IS_WHITELIST (see above).
-    #   - Array of scene class constants
+    #   - Valid values: Array of scene class constants
     #   - Default: [Scene_Title, Scene_Menu]
-    #   - Example: [Scene_Title, Scene_Menu, Scene_Gameover]
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SCENE_LIST_IS_WHITELIST = false
     SCENE_LIST = [Scene_Title, Scene_Menu].freeze
@@ -251,7 +252,7 @@ module Hammy
     #   When this switch is ON, all HUD sprites are hidden. When OFF, the
     #   HUD displays normally. The viewport and sprites are kept alive while
     #   hidden so the HUD reappears instantly when the switch is turned off.
-    #   - Any valid switch ID (1 to maximum switches in your project)
+    #   - Valid values: Any valid switch ID (1 to max switches in project)
     #   - Default: 12
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     HIDE_SWITCH_ID = 12
@@ -260,24 +261,30 @@ module Hammy
     # - Icon Settings -
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the icon indices used by the HUD. All indices refer to the
-    # Graphics/System/Iconset sheet using the standard 24×24 px icon grid
-    # with 16 icons per row — the same layout as Window_Base#draw_icon.
+    # Graphics/System/Iconset sheet using the standard 24x24 px icon grid
+    # with 16 icons per row - the same layout as Window_Base#draw_icon.
     # 
     # ICONS: Primary device icon indices keyed by device state symbol.
     #   - none:         Icon shown when no device has been detected yet
     #   - keyboard:     Icon shown while the active device is :keyboard
     #   - keyboard_ext: Optional second icon rendered flush-right of the
-    #                   keyboard icon to form a 48×24 wide indicator. Set
-    #                   to nil to keep the standard 24×24 single icon.
+    #                   keyboard icon to form a 48x24 wide indicator. Set
+    #                   to nil to keep the standard 24x24 single icon.
     #   - gamepad:      Icon shown while the active device is :gamepad
+    #   - Valid values: Hash of { symbol => integer or nil }
+    #   - Default: { none: 0, keyboard: 1, keyboard_ext: nil, gamepad: 2 }
     # 
     # BATTERY_ICONS: Battery state icon indices used in battery icon mode.
     #   Keys match the symbols returned by Input::Controller.power_level.
     #   Only active when SHOW_BATTERY_ICON is true.
+    #   - Valid values: Hash of { symbol => integer }
+    #   - Default: { WIRED: 3, MAX: 4, HIGH: 5, MEDIUM: 6, ... }
     # 
     # BATTERY_DEVICE_ICONS: Device icon overrides per battery state.
     #   Applied only while the active device is :gamepad. Only active
     #   when BATTERY_CHANGES_DEVICE_ICON is true.
+    #   - Valid values: Hash of { symbol => integer }
+    #   - Default: { WIRED: 10, MAX: 11, HIGH: 12, MEDIUM: 13, ... }
     #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     ICONS = {
       none:         0,
@@ -353,7 +360,7 @@ module Hammy
       
       @keyboard_ext_sprite = nil
       if ICONS[:keyboard_ext]
-        @keyboard_ext_sprite   = Sprite.new(@hud_viewport)
+        @keyboard_ext_sprite = Sprite.new(@hud_viewport)
         @keyboard_ext_sprite.z = Z_LEVEL
         @keyboard_ext_sprite.y = MARGIN
         @keyboard_ext_sprite.visible = false
@@ -362,13 +369,13 @@ module Hammy
       @battery_sprite = nil
       
       if SHOW_BATTERY_ICON
-        @battery_sprite   = Sprite.new(@hud_viewport)
+        @battery_sprite = Sprite.new(@hud_viewport)
         @battery_sprite.z = Z_LEVEL
       end
       
-      @last_device  = nil
+      @last_device = nil
       @last_battery = nil
-      @last_hidden  = nil
+      @last_hidden = nil
       
       _refresh_bitmaps
     end
@@ -388,10 +395,10 @@ module Hammy
       
       return if hidden
       
-      current_device  = Hammy::InputDeviceTracker.device
+      current_device = Hammy::InputDeviceTracker.device
       current_battery = _read_battery_level
       
-      return if current_device  == @last_device &&
+      return if current_device == @last_device &&
                 current_battery == @last_battery
       
       _refresh_bitmaps(current_device, current_battery)
@@ -494,7 +501,7 @@ module Hammy
       
       if @keyboard_ext_sprite && !@keyboard_ext_sprite.disposed?
         if wide_keyboard
-          @keyboard_ext_sprite.x       = device_left_x + 24
+          @keyboard_ext_sprite.x = device_left_x + 24
           @keyboard_ext_sprite.visible = true
           _draw_icon_to_sprite(@keyboard_ext_sprite, ICONS[:keyboard_ext])
         else
@@ -508,8 +515,8 @@ module Hammy
       
       if @battery_sprite && !@battery_sprite.disposed?
         if battery_visible
-          @battery_sprite.x       = Graphics.width - 24 - MARGIN
-          @battery_sprite.y       = MARGIN
+          @battery_sprite.x = Graphics.width - 24 - MARGIN
+          @battery_sprite.y = MARGIN
           @battery_sprite.visible = true
           _draw_icon_to_sprite(@battery_sprite, battery_idx)
         else
@@ -534,7 +541,7 @@ module Hammy
     def _draw_icon_to_sprite(sprite, icon_index)
       sprite.bitmap.dispose if sprite.bitmap && !sprite.bitmap.disposed?
       
-      iconset  = Cache.system("Iconset")
+      iconset = Cache.system("Iconset")
       src_rect = Rect.new(icon_index % 16 * 24, icon_index / 16 * 24, 24, 24)
       
       bmp = Bitmap.new(24, 24)

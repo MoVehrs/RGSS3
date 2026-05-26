@@ -1,48 +1,62 @@
+# encoding: utf-8
 #==============================================================================
-# ▼ Hammy - FF9 Dialog System v1.04
+# ▼ Hammy - FF9 Dialog System v1.05
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 05.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: None
+# -- Optional: Hammy - FF9 Windowskin System v1.01+,
+#              Hammy - Window Shadows v1.04+,
+#              Hammy - Window Headers v1.02+,
+#              Hammy - FF9 Choice Window v1.03+
 # -- Recommended: Text Cache v1.04 by Mithran
 # -- Credits: Jupiter Penguin (Message Effects, fade effect),
 #             Yami (Pop Message, base script),
-#             Yanfly (Ace Message System, escape codes, documentation style)
+#             Yanfly (Ace Message System, escape codes)
 # -- License: MIT License
 #==============================================================================
 
-$imported = {} if $imported.nil?
+$imported ||= {}
 $imported[:hammy_ff9_dialog_system] = true
 
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 05.05.2026 - Bubble positioning now dynamically resolves sprite height from
-#              Spriteset_Map to calculate the top of the target sprite, ensuring
-#              consistent spacing regardless of sprite dimensions. Fixed a bug
-#              where \w[n] parameters were rendered as visible text when message
-#              skipping was active. (v1.04)
-# 28.04.2026 - Added compatibility for EST Auto Text Color Plus v1.2. and fixed
-#              \bmc chaining bug where the initial message was skipped. (v1.03)
-# 26.04.2026 - Fixed asymmetric window padding and icon clipping by compensating
-#              for RGSS3 text_size() overhang and correcting the escape code
-#              stripping sequence. Resolved \a greedy text consumption, \pic
-#              crash/positioning bug, and \ii[n] family rendering failure.
-#              Optimized message processing with a lightweight prescan, removed
-#              redundant conversion passes, and aligned character drawing with
-#              Text Cache recommendations. (v1.02)
-# 06.12.2025 - Consolidated arrow images into a single spritesheet,
+# 25.05.2026 - (v1.05) Applied new documentation conventions.
+#              Migrated configuration modules to Hammy::PascalCase naming.
+#              Added unless $@ guards to alias definitions.
+#              Standardized and shortened alias names.
+# 
+# 05.05.2026 - (v1.04) Bubble positions now dynamically resolve sprite height
+#              from Spriteset_Map to calculate the top of the target sprite,
+#              ensuring uniform spacing regardless of sprite dimensions.
+#              Fixed a bug where \w[n] parameters were rendered as visible text
+#              when message skipping was active.
+# 
+# 28.04.2026 - (v1.03) Added compatibility for EST Auto Text Color Plus v1.2.
+#              and fixed \bmc chaining bug where initial message was skipped.
+# 
+# 26.04.2026 - (v1.02) Fixed asymmetric window padding and icon clipping by
+#              compensating for RGSS3 text_size() overhang and correcting the
+#              escape code stripping sequence. Resolved \a greedy text
+#              consumption, \pic crash/positioning bug, and \ii[n] family
+#              rendering failure. Optimized message processing with a light-
+#              weight prescan, removed redundant conversion passes, and aligned
+#              character drawing with Text Cache recommendations.
+# 
+# 06.12.2025 - (v1.01) Consolidated arrow images into a single spritesheet,
 #              refactored bubble tag and shadow sprites into Sprite_BubbleTag
 #              class for centralized management, cached shared sprite in
 #              Scene_Map instead of recreating per window, added Hammy Window
-#              Shadows compatibility, and general optimizations. (v1.01)
-# 18.11.2025 - Initial release. (v1.00)
+#              Shadows compatibility, and general optimizations.
+# 
+# 18.11.2025 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script provides an authentic Final Fantasy IX dialog system for RPG Maker
-# VX Ace. It displays message windows with speech bubble positioning above
-# characters, perfect for character dialogue and interactive conversations.
+# This script provides an authentic Final Fantasy IX dialog system for RPG
+# Maker VX Ace. It displays message windows with speech bubble positioning
+# above characters, ideal for character dialogue and dynamic conversations.
 # 
 # The system supports escape code-based bubble positioning, automatic window
 # positioning above or below characters, custom arrow sprite direction control,
@@ -62,7 +76,7 @@ $imported[:hammy_ff9_dialog_system] = true
 # ★ Compact spacing mode for empty lines
 # 
 # -----------------------------------------------------------------------------
-# ► Customization System
+# ► Dialog Customization Features
 # -----------------------------------------------------------------------------
 # ★ Configurable bubble positioning offsets and arrow sprites
 # ★ Configurable window display settings (line height, padding)
@@ -70,7 +84,7 @@ $imported[:hammy_ff9_dialog_system] = true
 # ★ Support for colored bubble arrows via Hammy FF9 Windowskin System
 # 
 # -----------------------------------------------------------------------------
-# ► Technical Features
+# ► Dialog Technical Features
 # -----------------------------------------------------------------------------
 # ★ Automatic bubble positioning with boundary corrections
 # ★ Narrow window centering on bubble sprite for small windows
@@ -98,14 +112,16 @@ $imported[:hammy_ff9_dialog_system] = true
 # ► Game_Interpreter (Class)
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
-#   - command_101 → ff9_dialog_game_interpreter_command_101
+#   - command_101 → ff9_dialog_gi_command_101
 # 
 # -----------------------------------------------------------------------------
 # ► Window_Base (Class < Window)
 # -----------------------------------------------------------------------------
 # ★ Alias Methods:
-#   - convert_escape_characters → ff9_dialog_win_base_conv_esc_chars
-#   - process_escape_character → ff9_dialog_win_base_proc_esc_char
+#   - convert_escape_characters → ff9_dialog_wb_cnv_esc
+#   - process_escape_character → ff9_dialog_wb_prc_esc
+#   - convert_escape_characters → ff9_dialog_wb_auto_fix
+#     (only when EST Auto Text Color Plus v1.2 is active)
 # 
 # -----------------------------------------------------------------------------
 # ► Window_Message (Class < Window_Base)
@@ -115,16 +131,16 @@ $imported[:hammy_ff9_dialog_system] = true
 #   - dispose → ff9_dialog_win_msg_dispose
 #   - close → ff9_dialog_win_msg_close
 #   - clear_flags → ff9_dialog_win_msg_clear_flags
-#   - update_placement → ff9_dialog_win_msg_update_placement
+#   - update_placement → ff9_dialog_wm_upd_plc
 #   - update → ff9_dialog_win_msg_update
 #   - fiber_main → ff9_dialog_win_msg_fiber_main
-#   - process_all_text → ff9_dialog_win_msg_process_all_text
-#   - update_show_fast → ff9_dialog_win_msg_update_show_fast
-#   - wait_for_one_character → ff9_dialog_win_msg_wait_one_char
+#   - process_all_text → ff9_dialog_wm_prc_all_txt
+#   - update_show_fast → ff9_dialog_wm_upd_shw_fst
+#   - wait_for_one_character → ff9_dialog_wm_wait_one_chr
 #   - new_page → ff9_dialog_win_msg_new_page
-#   - convert_escape_characters → ff9_dialog_win_msg_conv_esc_chars
-#   - obtain_escape_code → ff9_dialog_win_msg_obtain_escape_code
-#   - process_escape_character → ff9_dialog_win_msg_proc_esc_char
+#   - convert_escape_characters → ff9_dialog_wm_cnv_esc
+#   - obtain_escape_code → ff9_dialog_wm_obt_esc_cd
+#   - process_escape_character → ff9_dialog_wm_prc_esc
 # 
 # ★ Super Methods:
 #   - x=
@@ -137,7 +153,7 @@ $imported[:hammy_ff9_dialog_system] = true
 #   - update_padding_bottom
 #   - process_draw_icon
 # 
-# ★ Overwrite Methods:
+# ★ Overridden Methods:
 #   - process_new_line
 #   - input_pause
 #   - settings_changed?
@@ -158,7 +174,7 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Script Calls
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# The following script calls are available for use anywhere in your game.
+# The following script calls are available for use in events and other scripts.
 # 
 # -----------------------------------------------------------------------------
 # ► Message Effects Configuration
@@ -166,22 +182,18 @@ $imported[:hammy_ff9_dialog_system] = true
 # ★ $game_system.message_speed = n
 #   Sets the default text display speed to n characters per second.
 #   - Minimum value is 0 (no maximum limit)
-#   - Returns: nil
 # 
 # ★ $game_system.message_duration = n
 #   Sets the default effect duration to n frames for character fade-in.
 #   - Minimum value is 0 (no maximum limit)
-#   - Returns: nil
 # 
 # ★ $game_system.message_fading = true
 #   Enables fade-in effects for text display.
 #   - Characters fade in with effect (default)
-#   - Returns: nil
 #
 # ★ $game_system.message_fading = false
 #   Disables fade-in effects for text display.
 #   - Uses standard RGSS3 letter-by-letter drawing without effects
-#   - Returns: nil
 # 
 # ★ Examples:
 #   - Set text speed to 60 characters per second
@@ -343,7 +355,7 @@ $imported[:hammy_ff9_dialog_system] = true
 # -----------------------------------------------------------------------------
 # When a bubble target is set via \bm[x] or \bmc[x], the window automatically:
 #   - Positions itself above or below the character based on available space
-#   - Centers horizontally on the character (or arrow sprite for narrow windows)
+#   - Centers horizontally on character (or arrow sprite for narrow windows)
 #   - Adjusts position to stay within screen bounds
 #   - Displays an arrow sprite pointing to the character
 # 
@@ -360,7 +372,7 @@ $imported[:hammy_ff9_dialog_system] = true
 #==============================================================================
 # ▼ Recommended Scripts
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# The following scripts are highly recommended for optimal performance:
+# The following script is recommended for optimal performance:
 # 
 # -----------------------------------------------------------------------------
 # ► Text Cache v1.04 by Mithran
@@ -381,17 +393,13 @@ $imported[:hammy_ff9_dialog_system] = true
 # To install this script, open up your script editor and copy/paste this script
 # to an open slot below ▼ Materials/素材 but above ▼ Main. Remember to save.
 # 
-# ★ If using Hammy FF9 Windowskin System, place this script ABOVE the
-#   Windowskin System script.
+# ★ If using Hammy - FF9 Windowskin System, place this script ABOVE it.
 # 
-# ★ If using Hammy Window Shadows, place this script ABOVE the
-#   Window Shadows script.
+# ★ If using Hammy - Window Shadows, place this script ABOVE it.
 # 
-# ★ If using Hammy Window Headers, place this script ABOVE the 
-#   Window Headers script.
+# ★ If using Hammy - Window Headers, place this script ABOVE it.
 # 
-# ★ If using Hammy FF9 Choice Window, place this script BELOW the
-#   Choice Window script.
+# ★ If using Hammy - FF9 Choice Window, place this script BELOW it.
 # 
 #==============================================================================
 # ▼ Compatibility
@@ -407,62 +415,81 @@ $imported[:hammy_ff9_dialog_system] = true
 #  Configuration settings for the FF9 Dialog System.
 #==============================================================================
 
-module CONFIG
-  module FF9_DIALOG
+module Hammy
+  module FF9DialogSystem
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Dialog Window Display Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the visual appearance and behavior of dialog windows including
-    # text line spacing, padding, and window dimensions.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the visual appearance and behavior of dialog windows
+    # including text line spacing, padding, and window dimensions.
     # 
-    # LINE_HEIGHT: Height of each text line in pixels for dialog windows
-    #   Uses default font size by default, but can be set to any integer value
-    # STANDARD_PADDING: Window padding size in pixels for dialog windows
-    #   Controls the internal spacing between window borders and content
-    # COMPACT_SPACING: Enable compact spacing for empty text lines
-    #   When true, empty text lines use reduced height spacing for separation
-    # COMPACT_LINE_HEIGHT: Height for empty lines when compact spacing enabled
-    #   Pixel height used for empty text lines when COMPACT_SPACING is true
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # LINE_HEIGHT: Height of each text line in pixels for dialog windows.
+    #   Uses default font size by default, can be set to any integer value.
+    #   - Valid values: Any integer value
+    #   - Default: Font.default_size
+    # 
+    # STANDARD_PADDING: Window padding size in pixels for dialog windows.
+    #   Controls the internal spacing between window borders and content.
+    #   - Valid values: Any integer value
+    #   - Default: 12
+    # 
+    # COMPACT_SPACING: Enable compact spacing for empty text lines.
+    #   When true, empty text lines use reduced height for separation.
+    #   - Valid values: true or false
+    #   - Default: true
+    # 
+    # COMPACT_LINE_HEIGHT: Empty line height when compact spacing is enabled.
+    #   Pixel height used for empty text lines when COMPACT_SPACING is true.
+    #   - Valid values: Any integer value
+    #   - Default: 6
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     LINE_HEIGHT = Font.default_size
     STANDARD_PADDING = 12
     COMPACT_SPACING = true
     COMPACT_LINE_HEIGHT = 6
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Message Effects Display Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the visual appearance and behavior of message effects including
-    # character fade-in animation duration and text display speed.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the visual appearance and behavior of message effects
+    # including character fade-in animation duration and text display speed.
     # 
-    # FADE_DURATION: Default effect duration in frames for character fade-in
-    #   Controls how many frames it takes for characters to fully fade in
-    # FADE_SPEED: Default text display speed in characters per second
-    #   Controls how fast text characters appear on screen
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # FADE_DURATION: Default effect duration in frames for character fade-in.
+    #   Controls how many frames it takes for characters to fully fade in.
+    #   - Valid values: Any integer value
+    #   - Default: 6
+    # 
+    # FADE_SPEED: Default text display speed in characters per second.
+    #   Controls how fast text characters appear on screen.
+    #   - Valid values: Any integer value
+    #   - Default: 30
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     FADE_DURATION = 6
     FADE_SPEED = 30
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Bubble Positioning Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the positioning offsets and thresholds for bubble-style dialog
-    # windows. These settings control how dialog windows position themselves
-    # relative to target characters.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the positioning offsets and thresholds for bubble-style
+    # dialog windows. These settings control how dialog windows position
+    # themselves relative to target characters.
     # 
-    # y_offset_below: Vertical offset when window is positioned below character
-    #   Distance in pixels from character screen_y to window top when below
-    # y_offset_above: Vertical gap when window is positioned above character
-    #   Distance in pixels from the top of the target sprite to the bottom of
-    #   the window. The sprite height is resolved dynamically from Spriteset_Map
-    # tag_y_offset_below: Vertical offset when arrow is below window
-    #   Distance in pixels from window bottom to arrow sprite position
-    # tag_y_offset_above: Vertical offset when arrow is above window
-    #   Distance in pixels from window top to arrow sprite position
-    # narrow_width: Threshold width for narrow window centering mode
-    #   Narrow windows center on arrow sprite rather than character
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # BUBBLE_POSITION: Hash containing all bubble positioning configuration.
+    #   y_offset_below: Vertical offset for windows positioned below a target.
+    #     Distance in pixels from character screen_y to window top when below.
+    #   y_offset_above: Vertical gap for windows positioned above a target.
+    #     Distance in pixels from the top of the target sprite to the bottom
+    #     of the window. The sprite height is resolved dynamically.
+    #   tag_y_offset_below: Vertical offset when arrow is below window.
+    #     Distance in pixels from window bottom to arrow sprite position.
+    #   tag_y_offset_above: Vertical offset when arrow is above window.
+    #     Distance in pixels from window top to arrow sprite position.
+    #   narrow_width: Threshold width for narrow window centering mode.
+    #     Narrow windows center on arrow sprite rather than character.
+    #   - Valid values: Hash with defined symbol keys and integer values
+    #   - Default: { y_offset_below: 16, y_offset_above: 16, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_POSITION = {
       y_offset_below: 16,
       y_offset_above: 16,
@@ -471,73 +498,84 @@ module CONFIG
       narrow_width: 56
     }.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Default Bubble Arrow Sprite -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure the sprite filename for bubble arrow graphics. This sprite
     # sheet contains all four arrow directions in a 2x2 grid layout (64x64px).
     # The sprite file should be placed in the Graphics/System folder.
     # 
-    # Sprite Sheet Layout (64x64 pixels):
-    #   - (0-31, 0-31): up_left
-    #   - (32-63, 0-31): up_right
-    #   - (0-31, 32-63): down_left
-    #   - (32-63, 32-63): down_right
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # BUBBLE_SPRITESHEET: Sprite filename for bubble arrow graphics.
+    #   Sprite Sheet Layout (64x64 pixels):
+    #     - (0-31, 0-31): up_left
+    #     - (32-63, 0-31): up_right
+    #     - (0-31, 32-63): down_left
+    #     - (32-63, 32-63): down_right
+    #   - Valid values: String containing filename without extension
+    #   - Default: 'BubbleTag'
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_SPRITESHEET = 'BubbleTag'.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Colored Bubble Arrow Sprites -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # Configure colored bubble arrow sprite sheets for integration with the
-    # Hammy FF9 Windowskin System. These sprite sheets automatically match the
-    # current windowskin color theme when the system is active.
+    # Hammy FF9 Windowskin System. These sprite sheets automatically match
+    # the current windowskin color theme when the system is active.
     # 
-    # Each sprite sheet uses the same 2x2 grid layout as the default sprite.
-    # 
-    # grey: Grey-themed arrow sprite sheet for grey windowskins
-    # blue: Blue-themed arrow sprite sheet for blue windowskins
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # BUBBLE_ARROWS_COLORED: Hash mapping color themes to sprite filenames.
+    #   Each sprite sheet uses the same 2x2 grid layout as the default.
+    #   grey: Grey-themed arrow sprite sheet for grey windowskins.
+    #   blue: Blue-themed arrow sprite sheet for blue windowskins.
+    #   - Valid values: Hash with Symbol keys and String values
+    #   - Default: { grey: 'BubbleTag_Grey', blue: 'BubbleTag_Blue' }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     BUBBLE_ARROWS_COLORED = {
       grey: 'BubbleTag_Grey',
       blue: 'BubbleTag_Blue'
     }.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Shadow Spritesheet -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure the shadow sprite filename for bubble tag arrows for integration
-    # with Hammy Window Shadows. This sprite sheet contains all four arrow
-    # directions in a 2x2 grid layout (64x64px). The sprite file should be
-    # placed in the Graphics/System folder.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure the shadow sprite filename for bubble tag arrows for
+    # integration with Hammy Window Shadows. This sprite sheet contains all
+    # four arrow directions in a 2x2 grid layout (64x64px). The sprite file
+    # should be placed in the Graphics/System folder.
     # 
-    # Shadow sprite sheet uses the same layout as the main bubble tag sprite.
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # SHADOW_SPRITESHEET: Shadow sprite filename for bubble tag arrows.
+    #   Shadow sprite sheet uses the same layout as the main bubble tag.
+    #   - Valid values: String containing filename without extension
+    #   - Default: 'BubbleTag_Shadow'
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SHADOW_SPRITESHEET = 'BubbleTag_Shadow'.freeze
     
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     # - Bubble Tag Shadow Settings -
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-    # Configure shadow sprite positioning and appearance for bubble tag arrows.
-    # When Window Shadows script is active and enabled, a second shadow sprite
-    # is created below the main bubble tag sprite (z-1) with configurable
-    # offsets and opacity.
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # Configure shadow sprite positioning and appearance for bubble tag
+    # arrows. When Window Shadows script is active and enabled, a second
+    # shadow sprite is created below the main bubble tag sprite (z-1) with
+    # configurable offsets and opacity.
     # 
-    # shadow_offset_x: Horizontal offset for shadow sprite in pixels
-    #   Positive values move shadow to the right
-    # shadow_offset_y: Vertical offset for shadow sprite in pixels
-    #   Positive values move shadow downward
-    # shadow_opacity: Opacity value for shadow sprite (0-255)
-    #   Lower values create more transparent shadows
-    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+    # SHADOW_POSITION: Hash containing bubble tag shadow configuration.
+    #   shadow_offset_x: Horizontal offset for shadow sprite in pixels.
+    #     Positive values move shadow to the right.
+    #   shadow_offset_y: Vertical offset for shadow sprite in pixels.
+    #     Positive values move shadow downward.
+    #   shadow_opacity: Opacity value for shadow sprite (0-255).
+    #     Lower values create more transparent shadows.
+    #   - Valid values: Hash with defined symbol keys and integer values
+    #   - Default: { shadow_offset_x: 2, shadow_offset_y: 2, ... }
+    #=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
     SHADOW_POSITION = {
       shadow_offset_x: 2,
       shadow_offset_y: 2,
       shadow_opacity: 120
     }.freeze
     
-  end # FF9_DIALOG
-end # CONFIG
+  end # Hammy::FF9DialogSystem
+end # Hammy
 
 #==============================================================================
 # ▼ End of Documentation
@@ -568,7 +606,7 @@ class Game_System
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_dialog_game_system_initialize, :initialize
+  alias_method :ff9_dialog_game_system_initialize, :initialize unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -576,8 +614,8 @@ class Game_System
   def initialize
     ff9_dialog_game_system_initialize
     
-    @message_speed = CONFIG::FF9_DIALOG::FADE_SPEED
-    @message_duration = CONFIG::FF9_DIALOG::FADE_DURATION
+    @message_speed = Hammy::FF9DialogSystem::FADE_SPEED
+    @message_duration = Hammy::FF9DialogSystem::FADE_DURATION
     @message_fading = true
   end
   
@@ -608,14 +646,14 @@ class Game_Interpreter
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_dialog_game_interpreter_command_101, :command_101
+  alias_method :ff9_dialog_gi_command_101, :command_101 unless $@
   
   #--------------------------------------------------------------------------
   # * Show Text                                                       [Alias]
   #--------------------------------------------------------------------------
   def command_101
     return process_chained_messages if message_contains_chain_code?
-    ff9_dialog_game_interpreter_command_101
+    ff9_dialog_gi_command_101
   end
   
   #--------------------------------------------------------------------------
@@ -756,11 +794,11 @@ unless $imported[:hammy_ff9_choice_window]
     def get_config_module(window_class)
       case window_class
       when Window_ChoiceList
-        CONFIG::FF9_CHOICES
+        Hammy::FF9ChoiceWindow
       when Window_Message
-        CONFIG::FF9_DIALOG
+        Hammy::FF9DialogSystem
       else
-        CONFIG::FF9_DIALOG
+        Hammy::FF9DialogSystem
       end
     end
     
@@ -954,14 +992,14 @@ class Window_Base < Window
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_dialog_win_base_conv_esc_chars, :convert_escape_characters
-  alias_method :ff9_dialog_win_base_proc_esc_char, :process_escape_character
+  alias_method :ff9_dialog_wb_cnv_esc, :convert_escape_characters unless $@
+  alias_method :ff9_dialog_wb_prc_esc, :process_escape_character unless $@
   
   #--------------------------------------------------------------------------
   # * Preconvert Control Characters                                   [Alias]
   #--------------------------------------------------------------------------
   def convert_escape_characters(text)
-    result = ff9_dialog_win_base_conv_esc_chars(text)
+    result = ff9_dialog_wb_cnv_esc(text)
     convert_specified_escape_characters(result)
   end
   
@@ -1013,7 +1051,7 @@ class Window_Base < Window
         pos[:x] += bitmap.width
       end
     else
-      ff9_dialog_win_base_proc_esc_char(code, text, pos)
+      ff9_dialog_wb_prc_esc(code, text, pos)
     end
   end
   
@@ -1029,20 +1067,20 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   # * Alias Method Definitions                                       [Custom]
   #--------------------------------------------------------------------------
-  alias_method :ff9_dialog_win_msg_initialize, :initialize
-  alias_method :ff9_dialog_win_msg_dispose, :dispose
-  alias_method :ff9_dialog_win_msg_close, :close
-  alias_method :ff9_dialog_win_msg_clear_flags, :clear_flags
-  alias_method :ff9_dialog_win_msg_update_placement, :update_placement
-  alias_method :ff9_dialog_win_msg_update, :update
-  alias_method :ff9_dialog_win_msg_fiber_main, :fiber_main
-  alias_method :ff9_dialog_win_msg_process_all_text, :process_all_text
-  alias_method :ff9_dialog_win_msg_wait_one_char, :wait_for_one_character
-  alias_method :ff9_dialog_win_msg_new_page, :new_page
-  alias_method :ff9_dialog_win_msg_update_show_fast, :update_show_fast
-  alias_method :ff9_dialog_win_msg_obtain_escape_code, :obtain_escape_code
-  alias_method :ff9_dialog_win_msg_proc_esc_char, :process_escape_character
-  alias_method :ff9_dialog_win_msg_conv_esc_chars, :convert_escape_characters
+  alias_method :ff9_dialog_win_msg_initialize, :initialize unless $@
+  alias_method :ff9_dialog_win_msg_dispose, :dispose unless $@
+  alias_method :ff9_dialog_win_msg_close, :close unless $@
+  alias_method :ff9_dialog_win_msg_clear_flags, :clear_flags unless $@
+  alias_method :ff9_dialog_wm_upd_plc, :update_placement unless $@
+  alias_method :ff9_dialog_win_msg_update, :update unless $@
+  alias_method :ff9_dialog_win_msg_fiber_main, :fiber_main unless $@
+  alias_method :ff9_dialog_wm_prc_all_txt, :process_all_text unless $@
+  alias_method :ff9_dialog_wm_wait_one_chr, :wait_for_one_character unless $@
+  alias_method :ff9_dialog_win_msg_new_page, :new_page unless $@
+  alias_method :ff9_dialog_wm_upd_shw_fst, :update_show_fast unless $@
+  alias_method :ff9_dialog_wm_obt_esc_cd, :obtain_escape_code unless $@
+  alias_method :ff9_dialog_wm_prc_esc, :process_escape_character unless $@
+  alias_method :ff9_dialog_wm_cnv_esc, :convert_escape_characters unless $@
   
   #--------------------------------------------------------------------------
   # * Object Initialization                                           [Alias]
@@ -1051,10 +1089,10 @@ class Window_Message < Window_Base
     @graphics_width = Graphics.width
     @graphics_height = Graphics.height
     @is_scene_map = SceneManager.scene_is?(Scene_Map)
-    @line_height = CONFIG::FF9_DIALOG::LINE_HEIGHT
-    @standard_padding = CONFIG::FF9_DIALOG::STANDARD_PADDING
-    @compact_spacing = CONFIG::FF9_DIALOG::COMPACT_SPACING
-    @compact_line_height = CONFIG::FF9_DIALOG::COMPACT_LINE_HEIGHT
+    @line_height = Hammy::FF9DialogSystem::LINE_HEIGHT
+    @standard_padding = Hammy::FF9DialogSystem::STANDARD_PADDING
+    @compact_spacing = Hammy::FF9DialogSystem::COMPACT_SPACING
+    @compact_line_height = Hammy::FF9DialogSystem::COMPACT_LINE_HEIGHT
     @character_sprites = {}
     @auto_skip_disabled = false
     
@@ -1068,7 +1106,7 @@ class Window_Message < Window_Base
     @intended_window_y = nil
     @is_bubble_mode = false
     @chain_mode = false
-    @bubble_config = CONFIG::FF9_DIALOG::BUBBLE_POSITION.dup
+    @bubble_config = Hammy::FF9DialogSystem::BUBBLE_POSITION.dup
   end
   
   #--------------------------------------------------------------------------
@@ -1216,7 +1254,7 @@ class Window_Message < Window_Base
   # * Update Window Position                                          [Alias]
   #--------------------------------------------------------------------------
   def update_placement
-    return ff9_dialog_win_msg_update_placement unless @is_scene_map
+    return ff9_dialog_wm_upd_plc unless @is_scene_map
     
     @event_id = @event_pop_id
     @is_bubble_mode = !@event_id.nil?
@@ -1230,7 +1268,7 @@ class Window_Message < Window_Base
       update_bubble_position
     else
       fix_default_message
-      ff9_dialog_win_msg_update_placement
+      ff9_dialog_wm_upd_plc
     end
   end
   
@@ -1392,7 +1430,7 @@ class Window_Message < Window_Base
   # * Update Fast Forward Flag                                        [Alias]
   #--------------------------------------------------------------------------
   def update_show_fast
-    ff9_dialog_win_msg_update_show_fast unless @auto_disabled
+    ff9_dialog_wm_upd_shw_fst unless @auto_disabled
   end
   
   #--------------------------------------------------------------------------
@@ -1400,7 +1438,7 @@ class Window_Message < Window_Base
   #--------------------------------------------------------------------------
   def wait_for_one_character
     until @char_timer >= 60
-      ff9_dialog_win_msg_wait_one_char
+      ff9_dialog_wm_wait_one_chr
       @char_timer += @text_speed
     end
     
@@ -1445,7 +1483,7 @@ class Window_Message < Window_Base
     prescan_dialog_codes(all_text)
     update_placement
     adjust_dialog(all_text)
-    ff9_dialog_win_msg_process_all_text
+    ff9_dialog_wm_prc_all_txt
     
     until (@show_fast || @character_sprites.all? { |*, params| params.empty? })
       Fiber.yield
@@ -1485,7 +1523,7 @@ class Window_Message < Window_Base
   # * Preconvert Control Characters                                   [Alias]
   #--------------------------------------------------------------------------
   def convert_escape_characters(text)
-    result = ff9_dialog_win_msg_conv_esc_chars(text)
+    result = ff9_dialog_wm_cnv_esc(text)
     @auto_skip_disabled = !!result.match(/\eA/i)
     convert_dialog_escape_characters(result)
   end
@@ -1800,7 +1838,7 @@ class Window_Message < Window_Base
   # * Destructively Get Control Code                                  [Alias]
   #--------------------------------------------------------------------------
   def obtain_escape_code(text)
-    code = ff9_dialog_win_msg_obtain_escape_code(text)
+    code = ff9_dialog_wm_obt_esc_cd(text)
     
     if code && code[0].upcase == 'A' && code.length > 1
       text.insert(0, code[1..-1])
@@ -1829,7 +1867,7 @@ class Window_Message < Window_Base
     when 'A'
       @auto_disabled = true
     else
-      ff9_dialog_win_msg_proc_esc_char(code, text, pos)
+      ff9_dialog_wm_prc_esc(code, text, pos)
     end
   end
   
@@ -1870,9 +1908,9 @@ class Scene_Map < Scene_Base
     #------------------------------------------------------------------------
     # * Alias Method Definitions                                     [Custom]
     #------------------------------------------------------------------------
-    alias_method :ff9_dialog_scene_map_start, :start
-    alias_method :ff9_dialog_scene_map_update, :update
-    alias_method :ff9_dialog_scene_map_terminate, :terminate
+    alias_method :ff9_dialog_scene_map_start, :start unless $@
+    alias_method :ff9_dialog_scene_map_update, :update unless $@
+    alias_method :ff9_dialog_scene_map_terminate, :terminate unless $@
     
     #------------------------------------------------------------------------
     # * Start Processing                                              [Alias]
@@ -1942,13 +1980,13 @@ if defined?(ESTRIOLE) && defined?(ESTRIOLE::AUTOCOLOR)
     #------------------------------------------------------------------------
     # * Alias Method Definitions                                     [Custom]
     #------------------------------------------------------------------------
-    alias_method :ff9_dialog_win_base_autocolor_fix, :convert_escape_characters
+    alias_method :ff9_dialog_wb_auto_fix, :convert_escape_characters unless $@
     
     #------------------------------------------------------------------------
     # * Preconvert Control Characters                                 [Alias]
     #------------------------------------------------------------------------
     def convert_escape_characters(text)
-      result = ff9_dialog_win_base_autocolor_fix(text)
+      result = ff9_dialog_wb_auto_fix(text)
       return result unless result.is_a?(String)
       
       result.gsub!(/(\eC\[\d+\]) /, '\1')

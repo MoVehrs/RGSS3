@@ -1,8 +1,8 @@
 # encoding: utf-8
 #==============================================================================
-# ▼ Hammy - MKXP-Z Input Device Tracker v1.00
+# ▼ Hammy - MKXP-Z Input Device Tracker v1.01
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# -- Last Updated: 15.05.2026
+# -- Last Updated: 25.05.2026
 # -- Requires: mkxp-z (Ruby 3.1)
 # -- Recommended: None
 # -- Credits: None
@@ -15,7 +15,9 @@ $imported[:hammy_mkxp_z_input_device_tracker] = true
 #==============================================================================
 # ▼ Updates
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# 15.05.2026 - Initial release. (v1.00)
+# 25.05.2026 - (v1.01) Applied new documentation conventions.
+# 
+# 15.05.2026 - (v1.00) Initial release.
 # 
 #==============================================================================
 # ▼ Introduction
@@ -37,7 +39,7 @@ $imported[:hammy_mkxp_z_input_device_tracker] = true
 # ★ Gamepad detection via SDL controller button polling (buttons 0-14)
 # ★ Keyboard detection via mkxp-z native raw key state array
 # ★ Gamepad input takes priority over simultaneous keyboard input
-# ★ API availability checked once at startup and cached for the process lifetime
+# ★ API availability checked once at startup and cached for process lifetime
 # 
 #==============================================================================
 # ▼ Base Classes & Method Modifications
@@ -60,28 +62,28 @@ $imported[:hammy_mkxp_z_input_device_tracker] = true
 # -----------------------------------------------------------------------------
 # ★ Hammy::InputDeviceTracker.device
 #   Returns the current device symbol: :none, :keyboard, or :gamepad.
-#   - No parameters
+#   - Parameters: None
 #   - Returns: Symbol
 # 
 # ★ Hammy::InputDeviceTracker.keyboard?
 #   Returns true when the active device is :keyboard.
-#   - No parameters
+#   - Parameters: None
 #   - Returns: Boolean
 # 
 # ★ Hammy::InputDeviceTracker.gamepad?
 #   Returns true when the active device is :gamepad.
-#   - No parameters
+#   - Parameters: None
 #   - Returns: Boolean
 # 
 # ★ Hammy::InputDeviceTracker.none?
 #   Returns true when no device has been detected yet (:none).
-#   - No parameters
+#   - Parameters: None
 #   - Returns: Boolean
 # 
 # ★ Hammy::InputDeviceTracker.reset
 #   Resets the device state back to :none.
-#   - No parameters
-#   - Returns: nil
+#   - Parameters: None
+#   - Returns: Nil
 # 
 #==============================================================================
 # ▼ General Setup & Usage Guide
@@ -99,9 +101,12 @@ $imported[:hammy_mkxp_z_input_device_tracker] = true
 # until a different device fires.
 # 
 # ★ Gamepad input takes priority over keyboard input at all times.
+# 
 # ★ The device state does not revert automatically when input stops.
+# 
 # ★ Only digital buttons (0-14) are polled. Analog stick movement and trigger
 #   axis input do not register as gamepad activity.
+# 
 # ★ Call Hammy::InputDeviceTracker.reset to return the state to :none manually.
 # 
 # -----------------------------------------------------------------------------
@@ -113,6 +118,7 @@ $imported[:hammy_mkxp_z_input_device_tracker] = true
 # silently and the tracker stays at :none.
 # 
 # ★ This script requires mkxp-z and will not function on standard RGSS3.
+# 
 # ★ Missing APIs produce no errors; the tracker simply stays at :none.
 # 
 #==============================================================================
@@ -124,8 +130,8 @@ $imported[:hammy_mkxp_z_input_device_tracker] = true
 #==============================================================================
 # ▼ Compatibility
 #-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-# This script is made strictly for RPG Maker VX Ace running on mkxp-z.
-# It will not run on default RPG Maker VX Ace without mkxp-z.
+# This script is made strictly for RPG Maker VX Ace running on mkxp-z
+# (Ruby 3.1). It will not run on default RPG Maker VX Ace without mkxp-z.
 # 
 #==============================================================================
 
